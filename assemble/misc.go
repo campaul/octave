@@ -23,7 +23,7 @@ func binaryHelper(bitstr string) (b uint32) {
 }
 
 func convertRegisterNum(s string) (num uint8) {
-	reg, err := strconv.Atoi(s)
+	reg, err := strconv.ParseUint(s, 10, 2)
 	if err != nil {
 		panic(err)
 	}
