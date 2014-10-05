@@ -3,14 +3,55 @@ package assemble
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
-func Assemble(in io.Reader) ([]byte, error) {
-	_ = bufio.NewReader(in)
-	return []byte{}, nil
+var codeToFunc = map[string]func(string) instruction{
+	"JMP":     assembleJmp,
+	"LOADIH":  assembleLoadi,
+	"LOADIL":  assembleLoadi,
+	"ADD":     assembleTwoRegister,
+	"DIV":     assembleTwoRegister,
+	"AND":     assembleTwoRegister,
+	"XOR":     assembleTwoRegister,
+	"LOAD":    assembleTwoRegister,
+	"STORE":   assembleTwoRegister,
+	"STACKOP": assembleStackop,
+	"IN":      assembleDeviceIO,
+	"OUT":     assembleDeviceIO,
+}
+
+func Assemble(in io.Reader) (bytes []byte, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+	r := bufio.NewReader(in)
+	for line, err := r.ReadString('\n'); err != io.EOF; line, err = r.ReadString('\n') {
+		line = strings.TrimSpace(line)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+
+		asmFunc, ok := codeToFunc[fields[0]]
+		if !ok {
+			return []byte{}, errors.New(
+				fmt.Sprintf("'%v' is not a valiad assembly instruction", fields[0]),
+			)
+		}
+		bytes = append(bytes, asmFunc(line).assemble())
+	}
+	return bytes, nil
 }
 
 func assembleJmp(i string) instruction {
@@ -63,7 +104,7 @@ func assembleTwoRegister(i string) instruction {
 
 func assembleStackop(i string) instruction {
 	in := stackop{}
-	re := regexp.MustCompile("STACKOP ([0-9]{1,2}|0x[0-9A-F]{2}|0[0-7]{1,2})")
+	re := regexp.MustCompile("STACKOP ([0-9]{1,2})")
 	matches := re.FindStringSubmatch(i)
 	if matches == nil {
 		panic(errors.New("not a STACKOP"))
