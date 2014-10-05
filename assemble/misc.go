@@ -5,19 +5,11 @@ import (
 )
 
 func binaryHelperByte(bitstr string) byte {
-	return byte(binaryHelper(bitstr))
-}
-
-func binaryHelper(bitstr string) (b uint32) {
-	for i, c := range bitstr {
-		shift := uint32(len(bitstr) - 1 - i)
-		var num uint32 = 0
-		if c == '1' {
-			num = 1
-		}
-		b |= num << shift
+	num, err := strconv.ParseUint(bitstr, 2, 8)
+	if err != nil {
+		panic(err)
 	}
-	return
+	return byte(num)
 }
 
 func convertRegisterNum(s string) uint8 {
