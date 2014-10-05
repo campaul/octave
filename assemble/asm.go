@@ -14,26 +14,6 @@ func assemble(in io.Reader) ([]byte, error) {
 	return []byte{}, nil
 }
 
-type instruction interface {
-	assemble() byte
-}
-
-type jmp struct {
-	register uint8
-	negative bool
-	zero     bool
-	positive bool
-}
-
-func (j jmp) assemble() (b byte) {
-	b |= 0x0 << 5
-	b |= j.register << 3
-	b |= boolToUint8(j.negative) << 2
-	b |= boolToUint8(j.zero) << 1
-	b |= boolToUint8(j.positive)
-	return
-}
-
 func assembleJmp(i string) instruction {
 	var err error
 	j := jmp{}
@@ -59,25 +39,20 @@ func assembleJmp(i string) instruction {
 	return j
 }
 
-func binaryHelper(bitstr string) (b uint8) {
-	if len(bitstr) != 8 {
-		panic(errors.New("bitstr must be of length 8"))
+func assembleLoadi(i string) instruction {
+	in := loadi{}
+	re := regexp.MustCompile("LOADI(L|H) (0x[0-9A-F]|0[0-9]+|[0-9]+)")
+	matches := re.FindStringSubmatch(i)
+	if matches == nil {
+		panic(errors.New("not a LOADI(L|H)"))
 	}
+	lr := matches[1]
+	in.low = (lr == "L")
 
-	for i, c := range bitstr {
-		shift := uint8(7 - i)
-		var num uint8 = 0
-		if c == '1' {
-			num = 1
-		}
-		b |= num << shift
+	nibble, err := strconv.ParseUint(matches[2], 0, 4)
+	if err != nil {
+		panic(err)
 	}
-	return
-}
-
-func boolToUint8(b bool) uint8 {
-	if b {
-		return 1
-	}
-	return 0
+	in.nibble = uint8(nibble)
+	return in
 }
