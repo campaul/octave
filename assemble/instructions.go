@@ -1,5 +1,23 @@
 package assemble
 
+const (
+	add   = 0x4 // 0100
+	div   = 0x5 // 0101
+	and   = 0x6 // 0110
+	xor   = 0x7 // 0111
+	load  = 0x8 // 1000
+	store = 0x9 // 1001
+)
+
+var strToOpcode = map[string]uint8{
+	"ADD":   add,
+	"DIV":   div,
+	"AND":   and,
+	"XOR":   xor,
+	"LOAD":  load,
+	"STORE": store,
+}
+
 type instruction interface {
 	assemble() byte
 }
@@ -36,5 +54,18 @@ func (i loadi) assemble() (b byte) {
 	b |= binaryHelperByte("001") << 5
 	b |= bootToUint8(i.low) << 4
 	b |= i.nibble
+	return
+}
+
+type tworeg struct {
+	opcode uint8
+	dest   uint8
+	src    uint8
+}
+
+func (i tworeg) assemble() (b byte) {
+	b |= i.opcode << 4
+	b |= i.dest << 2
+	b |= i.src
 	return
 }

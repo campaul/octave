@@ -3,7 +3,6 @@ package assemble
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"strconv"
@@ -15,7 +14,6 @@ func assemble(in io.Reader) ([]byte, error) {
 }
 
 func assembleJmp(i string) instruction {
-	var err error
 	j := jmp{}
 	re := regexp.MustCompile("JMP R([0-3]) (N|)(Z|)(P|)")
 	matches := re.FindStringSubmatch(i)
@@ -23,14 +21,7 @@ func assembleJmp(i string) instruction {
 		panic(errors.New("not a JMP"))
 	}
 
-	reg, err := strconv.Atoi(matches[1])
-	if err != nil {
-		panic(err)
-	}
-	j.register = uint8(reg)
-	if j.register < 0 || j.register > 3 {
-		panic(errors.New(fmt.Sprint(j.register, " is not 0-3")))
-	}
+	j.register = convertRegisterNum(matches[1])
 
 	j.negative = matches[2] == "N"
 	j.zero = matches[3] == "Z"
@@ -54,5 +45,18 @@ func assembleLoadi(i string) instruction {
 		panic(err)
 	}
 	in.nibble = uint8(nibble)
+	return in
+}
+
+func assembleTwoRegister(i string) instruction {
+	in := tworeg{}
+	re := regexp.MustCompile("(ADD|DIV|AND|XOR|LOAD|STORE) R([0-3]), R([0-3])")
+	matches := re.FindStringSubmatch(i)
+	if matches == nil {
+		panic(errors.New("not a (ADD|DIV|AND|XOR|LOAD|STORE)"))
+	}
+	in.opcode = strToOpcode[matches[1]]
+	in.dest = convertRegisterNum(matches[2])
+	in.src = convertRegisterNum(matches[3])
 	return in
 }

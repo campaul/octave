@@ -38,3 +38,20 @@ func TestAssembleLoadi(t *testing.T) {
 		}
 	}
 }
+
+func TestTwoRegister(t *testing.T) {
+	tests := []testcase{
+		testcase{"ADD R0, R0", binaryHelperByte("01000000")},
+		testcase{"DIV R1, R1", binaryHelperByte("01010101")},
+		testcase{"AND R2, R2", binaryHelperByte("01101010")},
+		testcase{"XOR R3, R3", binaryHelperByte("01111111")},
+		testcase{"LOAD R0, R3", binaryHelperByte("10000011")},
+		testcase{"STORE R1, R2", binaryHelperByte("10010110")},
+	}
+	for _, test := range tests {
+		b := assembleTwoRegister(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out)
+		}
+	}
+}

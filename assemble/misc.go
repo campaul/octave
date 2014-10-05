@@ -1,5 +1,11 @@
 package assemble
 
+import (
+	"errors"
+	"fmt"
+	"strconv"
+)
+
 func binaryHelperByte(bitstr string) (b byte) {
 	return byte(binaryHelper(bitstr))
 }
@@ -12,6 +18,18 @@ func binaryHelper(bitstr string) (b uint32) {
 			num = 1
 		}
 		b |= num << shift
+	}
+	return
+}
+
+func convertRegisterNum(s string) (num uint8) {
+	reg, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+	num = uint8(reg)
+	if num < 0 || num > 3 {
+		panic(errors.New(fmt.Sprint(num, " is not 0-3")))
 	}
 	return
 }
