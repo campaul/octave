@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func assemble(in io.Reader) ([]byte, error) {
+func Assemble(in io.Reader) ([]byte, error) {
 	_ = bufio.NewReader(in)
 	return []byte{}, nil
 }
@@ -32,7 +32,7 @@ func assembleJmp(i string) instruction {
 
 func assembleLoadi(i string) instruction {
 	in := loadi{}
-	re := regexp.MustCompile("LOADI(L|H) (0x[0-9A-F]|0[0-9]+|[0-9]+)")
+	re := regexp.MustCompile("LOADI(L|H) (0x[0-9A-F]|0[0-7]+|[0-9]+)")
 	matches := re.FindStringSubmatch(i)
 	if matches == nil {
 		panic(errors.New("not a LOADI(L|H)"))
@@ -58,6 +58,21 @@ func assembleTwoRegister(i string) instruction {
 	in.opcode = strToOpcode[matches[1]]
 	in.dest = convertRegisterNum(matches[2])
 	in.src = convertRegisterNum(matches[3])
+	return in
+}
+
+func assembleStackop(i string) instruction {
+	in := stackop{}
+	re := regexp.MustCompile("STACKOP ([0-9]{1,2}|0x[0-9A-F]{2}|0[0-7]{1,2})")
+	matches := re.FindStringSubmatch(i)
+	if matches == nil {
+		panic(errors.New("not a STACKOP"))
+	}
+	op, err := strconv.ParseUint(matches[1], 0, 5)
+	if err != nil {
+		panic(err)
+	}
+	in.op = uint8(op)
 	return in
 }
 

@@ -22,6 +22,7 @@ var strToOpcode = map[string]uint8{
 	"LOAD":  load,
 	"STORE": store,
 }
+
 var strToDevioOpcode = map[string]uint8{
 	"IN":  in,
 	"OUT": out,
@@ -38,8 +39,9 @@ type jmp struct {
 	positive bool
 }
 
+const jmpOpcode = 0x0 // 000
 func (j jmp) assemble() (b byte) {
-	b |= 0x0 << 5
+	b |= jmpOpcode << 5
 	b |= j.register << 3
 	b |= bootToUint8(j.negative) << 2
 	b |= bootToUint8(j.zero) << 1
@@ -59,8 +61,9 @@ type loadi struct {
 	nibble uint8
 }
 
+const loadiOpcode = 0x1 // 001
 func (i loadi) assemble() (b byte) {
-	b |= binaryHelperByte("001") << 5
+	b |= loadiOpcode << 5
 	b |= bootToUint8(i.low) << 4
 	b |= i.nibble
 	return
@@ -76,6 +79,17 @@ func (i tworeg) assemble() (b byte) {
 	b |= i.opcode << 4
 	b |= i.dest << 2
 	b |= i.src
+	return
+}
+
+type stackop struct {
+	op uint8
+}
+
+const stackopOpcode = 0x5 // 101
+func (i stackop) assemble() (b byte) {
+	b |= stackopOpcode << 5
+	b |= i.op
 	return
 }
 

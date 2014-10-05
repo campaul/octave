@@ -56,6 +56,18 @@ func TestAssembleTwoRegister(t *testing.T) {
 	}
 }
 
+func TestAssembleStackop(t *testing.T) {
+	tests := []testcase{
+		testcase{"STACKOP 10", binaryHelperByte("10101010")},
+	}
+	for _, test := range tests {
+		b := assembleStackop(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out)
+		}
+	}
+}
+
 func TestAssembleDeviceIO(t *testing.T) {
 	tests := []testcase{
 		testcase{"IN R0, 0", binaryHelperByte("11000000")},
