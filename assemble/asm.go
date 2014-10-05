@@ -60,3 +60,16 @@ func assembleTwoRegister(i string) instruction {
 	in.src = convertRegisterNum(matches[3])
 	return in
 }
+
+func assembleDeviceIO(i string) instruction {
+	in := devio{}
+	re := regexp.MustCompile("(IN|OUT) R([0-3]), ([0-7])")
+	matches := re.FindStringSubmatch(i)
+	if matches == nil {
+		panic(errors.New("not a (IN|OUT)"))
+	}
+	in.opcode = strToDevioOpcode[matches[1]]
+	in.register = convertRegisterNum(matches[2])
+	in.device = convertDeviceNum(matches[3])
+	return in
+}

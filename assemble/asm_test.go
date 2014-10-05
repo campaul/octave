@@ -39,7 +39,7 @@ func TestAssembleLoadi(t *testing.T) {
 	}
 }
 
-func TestTwoRegister(t *testing.T) {
+func TestAssembleTwoRegister(t *testing.T) {
 	tests := []testcase{
 		testcase{"ADD R0, R0", binaryHelperByte("01000000")},
 		testcase{"DIV R1, R1", binaryHelperByte("01010101")},
@@ -50,6 +50,19 @@ func TestTwoRegister(t *testing.T) {
 	}
 	for _, test := range tests {
 		b := assembleTwoRegister(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out)
+		}
+	}
+}
+
+func TestAssembleDeviceIO(t *testing.T) {
+	tests := []testcase{
+		testcase{"IN R0, 0", binaryHelperByte("11000000")},
+		testcase{"OUT R3, 7", binaryHelperByte("11111111")},
+	}
+	for _, test := range tests {
+		b := assembleDeviceIO(test.in).assemble()
 		if b != test.out {
 			t.Error("Got", b, "expected", test.out)
 		}

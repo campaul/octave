@@ -9,6 +9,11 @@ const (
 	store = 0x9 // 1001
 )
 
+const (
+	in  = 0x6 //110
+	out = 0x7 //111
+)
+
 var strToOpcode = map[string]uint8{
 	"ADD":   add,
 	"DIV":   div,
@@ -16,6 +21,10 @@ var strToOpcode = map[string]uint8{
 	"XOR":   xor,
 	"LOAD":  load,
 	"STORE": store,
+}
+var strToDevioOpcode = map[string]uint8{
+	"IN":  in,
+	"OUT": out,
 }
 
 type instruction interface {
@@ -67,5 +76,18 @@ func (i tworeg) assemble() (b byte) {
 	b |= i.opcode << 4
 	b |= i.dest << 2
 	b |= i.src
+	return
+}
+
+type devio struct {
+	opcode   uint8
+	register uint8
+	device   uint8
+}
+
+func (i devio) assemble() (b byte) {
+	b |= i.opcode << 5
+	b |= i.register << 3
+	b |= i.device
 	return
 }
