@@ -151,17 +151,16 @@ func logic(i uint8, cpu *CPU) {
 
 func mem(i uint8, cpu *CPU) {
 	operation := i << 3 >> 7
-	destination := i << 4 >> 6
-	source := i << 6 >> 6
+	address_high := i << 4 >> 6
+	address_low := i << 6 >> 6
+	address := uint16(cpu.registers[address_high]) << 8 + uint16(cpu.registers[address_low])
 
 	if operation == 0 {
 		// LOAD
-		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[source])
-		cpu.registers[destination] = cpu.memory[address]
+		cpu.registers[0] = cpu.memory[address]
 	} else {
 		// STORE
-		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[destination])
-		cpu.memory[address] = cpu.registers[source]
+		cpu.memory[address] = cpu.registers[0]
 	}
 }
 
