@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,8 +9,7 @@ import (
 
 func main() {
 	fmt.Println("Initializing Octave CPU...")
-
-	cpu := &CPU{running: true}
+	cpu := &CPU{running: true, sp: 65535}
 
 	file, err := os.Open(os.Args[1])
 
@@ -21,6 +21,8 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
+	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
+
 	if err != nil {
 		return
 	}
@@ -29,12 +31,6 @@ func main() {
 		inst_byte := fetch(cpu)
 		inst_func := decode(inst_byte)
 		inst_func(inst_byte, cpu)
-
-		fmt.Printf("R0: %v\n", cpu.registers[0])
-		fmt.Printf("R1: %v\n", cpu.registers[1])
-		fmt.Printf("R2: %v\n", cpu.registers[2])
-		fmt.Printf("R3: %v\n", cpu.registers[3])
-		fmt.Println("")
 	}
 }
 
@@ -42,10 +38,31 @@ type CPU struct {
 	memory    []uint8
 	registers [4]uint8
 	pc        uint16
+	sp        uint16
 	running   bool
+	result    uint8
+	devices   [8]Device
 }
 
 type instruction func(uint8, *CPU)
+
+type Device interface {
+	read() uint8
+	write(uint8)
+}
+
+type tty struct {
+	reader *bufio.Reader
+}
+
+func (t tty) read() uint8 {
+	b, _ := t.reader.ReadByte()
+	return b
+}
+
+func (t tty) write(char uint8) {
+	fmt.Printf("%c", char)
+}
 
 func fetch(cpu *CPU) uint8 {
 	inst := cpu.memory[cpu.pc]
@@ -58,17 +75,17 @@ func decode(i uint8) instruction {
 
 	switch i >> 5 {
 	case 0:
-		inst = mem
+		inst = jmp
 	case 1:
 		inst = loadi
 	case 2:
-		inst = stack
-	case 3:
-		inst = jmp
-	case 4:
 		inst = math
-	case 5:
+	case 3:
 		inst = logic
+	case 4:
+		inst = mem
+	case 5:
+		inst = stack
 	case 6:
 		inst = in
 	case 7:
@@ -78,19 +95,29 @@ func decode(i uint8) instruction {
 	return inst
 }
 
-func mem(i uint8, cpu *CPU) {
+func jmp(i uint8, cpu *CPU) {
+	if i == 0 {
+		cpu.running = false
+	}
+
+	register := i << 3 >> 6
+	n := i << 5 >> 7
+	z := i << 6 >> 7
+	p := i << 7 >> 7
+
+	if (n==1 && cpu.result < 0) || (z==1 && cpu.result == 0) || (p==1 && cpu.result > 0) {
+		offset := int8(cpu.registers[register])
+		cpu.pc = uint16(int32(cpu.pc) + int32(offset))
+	}
 }
 
 func loadi(i uint8, cpu *CPU) {
-	cpu.registers[0] = i << 3 >> 3
-}
+	location := i << 3 >> 7
 
-func stack(i uint8, cpu *CPU) {
-}
-
-func jmp(i uint8, cpu *CPU) {
-	if i == 96 {
-		cpu.running = false
+	if location == 0 {
+		cpu.registers[0] = (i << 4) | (cpu.registers[0] << 4 >> 4)
+	} else {
+		cpu.registers[0] = (i << 4 >> 4) | (cpu.registers[0] >> 4 << 4)
 	}
 }
 
@@ -104,15 +131,108 @@ func math(i uint8, cpu *CPU) {
 	} else {
 		cpu.registers[destination] = cpu.registers[destination] / cpu.registers[source]
 	}
+
+	cpu.result = cpu.registers[destination]
 }
 
 func logic(i uint8, cpu *CPU) {
+	operation := i << 3 >> 7
+	destination := i << 4 >> 6
+	source := i << 6 >> 6
+
+	if operation == 0 {
+		cpu.registers[destination] = cpu.registers[destination] & cpu.registers[source]
+	} else {
+		cpu.registers[destination] = cpu.registers[destination] ^ cpu.registers[source]
+	}
+
+	cpu.result = cpu.registers[destination]
+}
+
+func mem(i uint8, cpu *CPU) {
+	operation := i << 3 >> 7
+	destination := i << 4 >> 6
+	source := i << 6 >> 6
+
+	if operation == 0 {
+		// LOAD
+		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[source])
+		cpu.registers[destination] = cpu.memory[address]
+	} else {
+		// STORE
+		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[destination])
+		cpu.memory[address] = cpu.registers[source]
+	}
+}
+
+func stack(i uint8, cpu *CPU) {
+	stacki := i << 3 >> 3
+
+	switch stacki {
+		case 0:
+			// add16
+		case 1:
+			// sub16
+		case 2:
+			// mul16
+		case 3:
+			// div16
+		case 4:
+			// mod16
+		case 5:
+			// neg16
+		case 6:
+			// and16
+		case 7:
+			// or16
+		case 8:
+			// xor16
+		case 9:
+			// not16
+		case 10:
+			// add32
+		case 11:
+			// sub32
+		case 12:
+			// mul32
+		case 13:
+			// div32
+		case 14:
+			// mod32
+		case 15:
+			// neg32
+		case 16:
+			// and32
+		case 17:
+			// or32
+		case 18:
+			// xor32
+		case 19:
+			// not32
+		case 20:
+			// call
+		case 21:
+			// trap
+		case 22:
+			// ret
+		case 23:
+			// iret
+		default:
+			// device := stacki - 24
+			// TODO: enable device
+	}
 }
 
 func in(i uint8, cpu *CPU) {
+	device := i << 5 >> 5
+	destination := i << 3 >> 6
+	cpu.registers[destination] = cpu.devices[device].read()
 }
 
 func out(i uint8, cpu *CPU) {
+	device := i << 3 >> 5
+	source := i << 6 >> 6
+	cpu.devices[device].write(cpu.registers[source])
 }
 
 func illegal(i uint8, cpu *CPU) {
