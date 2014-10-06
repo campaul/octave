@@ -21,3 +21,16 @@ func TestGenerateMov(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateLoadi(t *testing.T) {
+	tests := []ptestcase{
+		ptestcase{"LOADI 0xFF", []instruction{loadi{true, 0xF}, loadi{false, 0xF}}},
+		ptestcase{"LOADI 0xF0", []instruction{loadi{true, 0x0}, loadi{false, 0xF}}},
+	}
+	for _, test := range tests {
+		out := generateLoadi(test.in).translate()
+		if !reflect.DeepEqual(out, test.out) {
+			t.Error("Got", out, "expected", test.out)
+		}
+	}
+}
