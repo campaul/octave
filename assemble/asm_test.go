@@ -13,6 +13,7 @@ type testcase struct {
 
 func TestAssemble(t *testing.T) {
 	in := `
+		; comment
 		JMP R3 NZP
 		LOADIH 0xF
 		LOADIL 0xF

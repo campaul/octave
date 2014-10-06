@@ -10,7 +10,7 @@ import (
 func main() {
 	args := os.Args
 	if len(args) < 3 {
-		fmt.Println("Usage: %v [assembly_file] [output_file]", args[0])
+		fmt.Printf("Usage: %v [assembly_file] [output_file]\n", args[0])
 		return
 	}
 	file, err := os.Open(args[1])

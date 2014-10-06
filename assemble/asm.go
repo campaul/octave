@@ -26,32 +26,44 @@ var codeToFunc = map[string]func(string) instruction{
 }
 
 func Assemble(in io.Reader) (bytes []byte, err error) {
-	defer func() {
+	/*defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
 		}
-	}()
+	}()*/
 	r := bufio.NewReader(in)
-	for line, err := r.ReadString('\n'); err != io.EOF; line, err = r.ReadString('\n') {
+	instructions := convertToInstructions(r)
+	for _, i := range instructions {
+		bytes = append(bytes, i.assemble())
+	}
+	return bytes, nil
+}
+
+func convertToInstructions(in *bufio.Reader) (instructions []instruction) {
+	for line, err := in.ReadString('\n'); err != io.EOF; line, err = in.ReadString('\n') {
 		line = strings.TrimSpace(line)
 		if err != nil {
-			return []byte{}, err
+			panic(err)
 		}
 
+		if len(line) == 0 || line[0] == ';' {
+			continue
+		}
 		fields := strings.Fields(line)
-		if len(fields) == 0 {
+
+		insts := tryPseudo(line).translate()
+		if len(insts) != 0 {
+			instructions = append(instructions, insts...)
 			continue
 		}
 
 		asmFunc, ok := codeToFunc[fields[0]]
 		if !ok {
-			return []byte{}, errors.New(
-				fmt.Sprintf("'%v' is not a valiad assembly instruction", fields[0]),
-			)
+			panic(errors.New(fmt.Sprintf("'%v' is not a valid assembly instruction", fields[0])))
 		}
-		bytes = append(bytes, asmFunc(line).assemble())
+		instructions = append(instructions, asmFunc(line))
 	}
-	return bytes, nil
+	return
 }
 
 func assembleJmp(i string) instruction {
