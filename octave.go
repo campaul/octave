@@ -70,11 +70,7 @@ func decode(i uint8) instruction {
 	case 1:
 		inst = loadi
 	case 2:
-		if (i << 3) < 25 {
-			inst = stack
-		} else {
-			inst = inte
-		}
+		inst = stack
 	case 3:
 		inst = jmp
 	case 4:
@@ -98,9 +94,6 @@ func loadi(i uint8, cpu *CPU) {
 }
 
 func stack(i uint8, cpu *CPU) {
-}
-
-func inte(i uint8, cpu *CPU) {
 }
 
 func jmp(i uint8, cpu *CPU) {
