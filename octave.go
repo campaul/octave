@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 )
 
@@ -20,14 +21,7 @@ func main() {
 
 	defer file.Close()
 
-	stat, err := file.Stat()
-
-	if err != nil {
-		return
-	}
-
-	cpu.memory = make([]uint8, stat.Size())
-	_, err = file.Read(cpu.memory)
+	cpu.memory, err = ioutil.ReadAll(file)
 
 	if err != nil {
 		return
