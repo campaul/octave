@@ -10,6 +10,7 @@ func main() {
 
 	cpu := new(CPU)
 	cpu.running = true
+	cpu.registers = make([]uint8, 4)
 
 	file, err := os.Open(os.Args[1])
 
@@ -36,17 +37,20 @@ func main() {
 		inst_byte := fetch(cpu)
 		inst_func := decode(inst_byte)
 		inst_func(inst_byte, cpu)
+
+		fmt.Printf("R0: %v\n", cpu.registers[0])
+		fmt.Printf("R1: %v\n", cpu.registers[1])
+		fmt.Printf("R2: %v\n", cpu.registers[2])
+		fmt.Printf("R3: %v\n", cpu.registers[3])
+		fmt.Println("")
 	}
 }
 
 type CPU struct {
-	memory  []uint8
-	r0      uint8
-	r1      uint8
-	r2      uint8
-	r3      uint8
-	pc      uint16
-	running bool
+	memory    []uint8
+	registers []uint8
+	pc        uint16
+	running   bool
 }
 
 type instruction func(uint8, *CPU)
@@ -87,45 +91,44 @@ func decode(i uint8) instruction {
 }
 
 func mem(i uint8, cpu *CPU) {
-	fmt.Println("mem")
 }
 
 func loadi(i uint8, cpu *CPU) {
-	fmt.Println("loadi")
+	cpu.registers[0] = i << 3 >> 3
 }
 
 func stack(i uint8, cpu *CPU) {
-	fmt.Println("stack")
 }
 
 func inte(i uint8, cpu *CPU) {
-	fmt.Println("inte")
 }
 
 func jmp(i uint8, cpu *CPU) {
 	if i == 96 {
 		cpu.running = false
 	}
-
-	fmt.Println("jmp")
 }
 
 func math(i uint8, cpu *CPU) {
-	fmt.Println("math")
+	operation := i << 3 >> 7
+	destination := i << 4 >> 6
+	source := i << 6 >> 6
+
+	if operation == 0 {
+		cpu.registers[destination] = cpu.registers[destination] + cpu.registers[source]
+	} else {
+		cpu.registers[destination] = cpu.registers[destination] / cpu.registers[source]
+	}
 }
 
 func logic(i uint8, cpu *CPU) {
-	fmt.Println("logic")
 }
 
 func in(i uint8, cpu *CPU) {
-	fmt.Println("in")
 }
 
 func out(i uint8, cpu *CPU) {
-	fmt.Println("out")
 }
 
 func illegal(i uint8, cpu *CPU) {
-	fmt.Println("illegal")
 }
