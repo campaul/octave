@@ -22,35 +22,87 @@ func main() {
         return
     }
 
-    bs := make([]byte, stat.Size())
+    instructions := make([]byte, stat.Size())
     _, err = file.Read(bs)
 
     if err != nil {
         return
     }
 
-    for _, instruction := range bs {
-        decode(instruction)
+    for _, i := range instructions {
+        execute(decode(i))
     }
 }
 
-func decode(instruction byte) {
-    switch instruction >> 5 {
+type instruction func(byte)
+
+func decode(i byte) (instruction, byte) {
+    switch i >> 5 {
+        case 0:
+            return mem, i
         case 1:
-            fmt.Println("MEM")
+            return loadi, i
         case 2:
-            fmt.Println("LOADI")
+            if (i << 3) < 25 {
+                return stack, i
+            } else {
+                return inte, i
+            }
         case 3:
-            fmt.Println("STACK")
+            return jmp, i
         case 4:
-            fmt.Println("JMP")
+            return math, i
         case 5:
-            fmt.Println("MATH")
+            return logic, i
         case 6:
-            fmt.Println("LOGIC")
+            return in, i
         case 7:
-            fmt.Println("IN")
-        case 8:
-            fmt.Println("OUT")
+            return out, i
     }
+
+    return illegal, i
+}
+
+func execute(inst_func instruction, i byte) {
+    inst_func(i)
+}
+
+func mem(i byte) {
+    fmt.Println("mem")
+}
+
+func loadi(i byte) {
+    fmt.Println("loadi")
+}
+
+func stack(i byte) {
+    fmt.Println("stack")
+}
+
+func inte(i byte) {
+    fmt.Println("inte")
+}
+
+func jmp(i byte) {
+    fmt.Println("jmp")
+}
+
+func math(i byte) {
+    fmt.Println("math")
+}
+
+func logic(i byte) {
+    fmt.Println("logic")
+}
+
+func in(i byte) {
+    fmt.Println("in")
+}
+
+func out(i byte) {
+    fmt.Println("out")
+}
+
+func illegal(i byte) {
+    fmt.Println("illegal")
 }
