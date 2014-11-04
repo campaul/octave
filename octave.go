@@ -23,7 +23,7 @@ func main() {
     }
 
     instructions := make([]byte, stat.Size())
-    _, err = file.Read(bs)
+    _, err = file.Read(instructions)
 
     if err != nil {
         return
