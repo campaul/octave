@@ -22,7 +22,7 @@ func main() {
         return
     }
 
-    instructions := make([]byte, stat.Size())
+    instructions := make([]uint8, stat.Size())
     _, err = file.Read(instructions)
 
     if err != nil {
@@ -34,9 +34,18 @@ func main() {
     }
 }
 
-type instruction func(byte)
+type CPU struct {
+    memory [65536]uint8
+    r0 uint8
+    r1 uint8
+    r2 uint8
+    r3 uint8
+    pc uint16
+}
 
-func decode(i byte) (instruction, byte) {
+type instruction func(uint8)
+
+func decode(i uint8) (instruction, uint8) {
     switch i >> 5 {
         case 0:
             return mem, i
@@ -63,46 +72,46 @@ func decode(i byte) (instruction, byte) {
     return illegal, i
 }
 
-func execute(inst_func instruction, i byte) {
+func execute(inst_func instruction, i uint8) {
     inst_func(i)
 }
 
-func mem(i byte) {
+func mem(i uint8) {
     fmt.Println("mem")
 }
 
-func loadi(i byte) {
+func loadi(i uint8) {
     fmt.Println("loadi")
 }
 
-func stack(i byte) {
+func stack(i uint8) {
     fmt.Println("stack")
 }
 
-func inte(i byte) {
+func inte(i uint8) {
     fmt.Println("inte")
 }
 
-func jmp(i byte) {
+func jmp(i uint8) {
     fmt.Println("jmp")
 }
 
-func math(i byte) {
+func math(i uint8) {
     fmt.Println("math")
 }
 
-func logic(i byte) {
+func logic(i uint8) {
     fmt.Println("logic")
 }
 
-func in(i byte) {
+func in(i uint8) {
     fmt.Println("in")
 }
 
-func out(i byte) {
+func out(i uint8) {
     fmt.Println("out")
 }
 
-func illegal(i byte) {
+func illegal(i uint8) {
     fmt.Println("illegal")
 }
