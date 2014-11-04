@@ -8,6 +8,9 @@ import (
 func main() {
     fmt.Println("Initializing Octave CPU...")
 
+    cpu := new(CPU)
+    cpu.running = true
+
     file, err := os.Open(os.Args[1])
 
     if err != nil {
@@ -22,96 +25,107 @@ func main() {
         return
     }
 
-    instructions := make([]uint8, stat.Size())
-    _, err = file.Read(instructions)
+    cpu.memory = make([]uint8, stat.Size())
+    _, err = file.Read(cpu.memory)
 
     if err != nil {
         return
     }
 
-    for _, i := range instructions {
-        execute(decode(i))
+    for cpu.running {
+        inst_byte := fetch(cpu)
+        inst_func := decode(inst_byte)
+        inst_func(inst_byte, cpu)
     }
 }
 
 type CPU struct {
-    memory [65536]uint8
+    memory []uint8
     r0 uint8
     r1 uint8
     r2 uint8
     r3 uint8
     pc uint16
+    running bool
 }
 
-type instruction func(uint8)
+type instruction func(uint8, *CPU)
 
-func decode(i uint8) (instruction, uint8) {
+func fetch(cpu *CPU) uint8 {
+    inst := cpu.memory[cpu.pc]
+    cpu.pc = cpu.pc + 1
+    return inst
+}
+
+func decode(i uint8) instruction {
+    inst := illegal
+
     switch i >> 5 {
         case 0:
-            return mem, i
+            inst = mem
         case 1:
-            return loadi, i
+            inst = loadi
         case 2:
             if (i << 3) < 25 {
-                return stack, i
+                inst = stack
             } else {
-                return inte, i
+                inst = inte
             }
         case 3:
-            return jmp, i
+            inst = jmp
         case 4:
-            return math, i
+            inst = math
         case 5:
-            return logic, i
+            inst = logic
         case 6:
-            return in, i
+            inst = in
         case 7:
-            return out, i
+            inst = out
     }
 
-    return illegal, i
+    return inst
 }
 
-func execute(inst_func instruction, i uint8) {
-    inst_func(i)
-}
-
-func mem(i uint8) {
+func mem(i uint8, cpu *CPU) {
     fmt.Println("mem")
 }
 
-func loadi(i uint8) {
+func loadi(i uint8, cpu *CPU) {
     fmt.Println("loadi")
 }
 
-func stack(i uint8) {
+func stack(i uint8, cpu *CPU) {
     fmt.Println("stack")
 }
 
-func inte(i uint8) {
+func inte(i uint8, cpu *CPU) {
     fmt.Println("inte")
 }
 
-func jmp(i uint8) {
+func jmp(i uint8, cpu *CPU) {
+    if i == 96 {
+        cpu.running = false
+    }
+
     fmt.Println("jmp")
 }
 
-func math(i uint8) {
+func math(i uint8, cpu *CPU) {
     fmt.Println("math")
 }
 
-func logic(i uint8) {
+func logic(i uint8, cpu *CPU) {
     fmt.Println("logic")
 }
 
-func in(i uint8) {
+func in(i uint8, cpu *CPU) {
     fmt.Println("in")
 }
 
-func out(i uint8) {
+func out(i uint8, cpu *CPU) {
     fmt.Println("out")
 }
 
-func illegal(i uint8) {
+func illegal(i uint8, cpu *CPU) {
     fmt.Println("illegal")
 }
