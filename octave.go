@@ -8,7 +8,7 @@ import (
 func main() {
     fmt.Println("Initializing Octave CPU...")
 
-    file, err := os.Open("hello.bin")
+    file, err := os.Open(os.Args[1])
 
     if err != nil {
         return
