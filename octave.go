@@ -9,9 +9,7 @@ import (
 func main() {
 	fmt.Println("Initializing Octave CPU...")
 
-	cpu := new(CPU)
-	cpu.running = true
-	cpu.registers = make([]uint8, 4)
+	cpu := &CPU{running: true}
 
 	file, err := os.Open(os.Args[1])
 
@@ -42,7 +40,7 @@ func main() {
 
 type CPU struct {
 	memory    []uint8
-	registers []uint8
+	registers [4]uint8
 	pc        uint16
 	running   bool
 }
