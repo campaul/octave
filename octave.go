@@ -85,7 +85,13 @@ func jmp(i uint8, cpu *CPU) {
 }
 
 func loadi(i uint8, cpu *CPU) {
-	cpu.registers[0] = i << 3 >> 3
+	location := i << 3 >> 7
+
+	if location == 0 {
+		cpu.registers[0] = (i << 4) | (cpu.registers[0] << 4 >> 4)
+	} else {
+		cpu.registers[0] = (i << 4 >> 4) | (cpu.registers[0] >> 4 << 4)
+	}
 }
 
 func math(i uint8, cpu *CPU) {
