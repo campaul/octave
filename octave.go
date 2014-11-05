@@ -8,7 +8,6 @@ import (
 
 func main() {
 	fmt.Println("Initializing Octave CPU...")
-
 	cpu := &CPU{running: true}
 
 	file, err := os.Open(os.Args[1])
@@ -43,6 +42,7 @@ type CPU struct {
 	registers [4]uint8
 	pc        uint16
 	running   bool
+	result    uint8
 }
 
 type instruction func(uint8, *CPU)
@@ -82,6 +82,16 @@ func jmp(i uint8, cpu *CPU) {
 	if i == 0 {
 		cpu.running = false
 	}
+
+	register := i << 3 >> 6
+	n := i << 5 >> 7
+	z := i << 6 >> 7
+	p := i << 7 >> 7
+
+	if (n==1 && cpu.result < 0) || (z==1 && cpu.result == 0) || (p==1 && cpu.result > 0) {
+		offset := int8(cpu.registers[register])
+		cpu.pc = uint16(int32(cpu.pc) + int32(offset))
+	}
 }
 
 func loadi(i uint8, cpu *CPU) {
@@ -104,6 +114,8 @@ func math(i uint8, cpu *CPU) {
 	} else {
 		cpu.registers[destination] = cpu.registers[destination] / cpu.registers[source]
 	}
+
+	cpu.result = cpu.registers[destination]
 }
 
 func logic(i uint8, cpu *CPU) {
