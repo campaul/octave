@@ -58,17 +58,17 @@ func decode(i uint8) instruction {
 
 	switch i >> 5 {
 	case 0:
-		inst = mem
+		inst = jmp
 	case 1:
 		inst = loadi
 	case 2:
-		inst = stack
-	case 3:
-		inst = jmp
-	case 4:
 		inst = math
-	case 5:
+	case 3:
 		inst = logic
+	case 4:
+		inst = mem
+	case 5:
+		inst = stack
 	case 6:
 		inst = in
 	case 7:
@@ -78,20 +78,14 @@ func decode(i uint8) instruction {
 	return inst
 }
 
-func mem(i uint8, cpu *CPU) {
+func jmp(i uint8, cpu *CPU) {
+	if i == 0 {
+		cpu.running = false
+	}
 }
 
 func loadi(i uint8, cpu *CPU) {
 	cpu.registers[0] = i << 3 >> 3
-}
-
-func stack(i uint8, cpu *CPU) {
-}
-
-func jmp(i uint8, cpu *CPU) {
-	if i == 96 {
-		cpu.running = false
-	}
 }
 
 func math(i uint8, cpu *CPU) {
@@ -107,6 +101,12 @@ func math(i uint8, cpu *CPU) {
 }
 
 func logic(i uint8, cpu *CPU) {
+}
+
+func mem(i uint8, cpu *CPU) {
+}
+
+func stack(i uint8, cpu *CPU) {
 }
 
 func in(i uint8, cpu *CPU) {
