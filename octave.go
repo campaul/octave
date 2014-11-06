@@ -21,7 +21,8 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
-	cpu.devices[0] = stack{cpu}
+	cpu.stack = stack{cpu}
+	cpu.devices[0] = cpu.stack
 	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
 
 	if err != nil {
@@ -43,6 +44,7 @@ type CPU struct {
 	running   bool
 	result    uint8
 	devices   [8]Device
+	stack     stack
 }
 
 type instruction func(uint8, *CPU)
@@ -191,50 +193,134 @@ func mem(i uint8, cpu *CPU) {
 	}
 }
 
+func pop16(s stack) uint16 {
+	byte_1 := s.read()
+	byte_2 := s.read()
+	return uint16(byte_1)<<8 + uint16(byte_2)
+}
+
+func pop32(s stack) uint32 {
+	byte_1 := s.read()
+	byte_2 := s.read()
+	byte_3 := s.read()
+	byte_4 := s.read()
+	return uint32(byte_1)<<24 + uint32(byte_2)<<16 + uint32(byte_3)<<8 + uint32(byte_4)
+}
+
+func push16(s stack, value uint16) {
+	byte_1 := uint8(value >> 8)
+	byte_2 := uint8(value << 8 >> 8)
+	s.write(byte_2)
+	s.write(byte_1)
+}
+
+func push32(s stack, value uint32) {
+	byte_1 := uint8(value >> 24)
+	byte_2 := uint8(value << 8 >> 24)
+	byte_3 := uint8(value << 16 >> 24)
+	byte_4 := uint8(value << 24 >> 24)
+	s.write(byte_4)
+	s.write(byte_3)
+	s.write(byte_2)
+	s.write(byte_1)
+}
+
 func stacki(i uint8, cpu *CPU) {
 	stacki := i << 3 >> 3
 
 	switch stacki {
 	case 0:
 		// add16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a+b)
 	case 1:
 		// sub16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a-b)
 	case 2:
 		// mul16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a*b)
 	case 3:
 		// div16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a/b)
 	case 4:
 		// mod16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a%b)
 	case 5:
 		// neg16
 	case 6:
 		// and16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a&b)
 	case 7:
 		// or16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a|b)
 	case 8:
 		// xor16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a^b)
 	case 9:
 		// not16
+		a := pop16(cpu.stack)
+		push16(cpu.stack, ^a)
 	case 10:
 		// add32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a+b)
 	case 11:
 		// sub32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a-b)
 	case 12:
 		// mul32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a*b)
 	case 13:
 		// div32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a/b)
 	case 14:
 		// mod32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a%b)
 	case 15:
 		// neg32
 	case 16:
 		// and32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a&b)
 	case 17:
 		// or32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a|b)
 	case 18:
 		// xor32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a^b)
 	case 19:
 		// not32
+		a := pop32(cpu.stack)
+		push32(cpu.stack, ^a)
 	case 20:
 		// Get jump address off the stack
 		new_pc_high := cpu.devices[0].read()
