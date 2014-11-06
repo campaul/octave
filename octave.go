@@ -21,6 +21,7 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
+	cpu.devices[0] = stack{cpu}
 	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
 
 	if err != nil {
@@ -64,6 +65,21 @@ func (t tty) write(char uint8) {
 	fmt.Printf("%c", char)
 }
 
+type stack struct {
+	cpu *CPU
+}
+
+func (s stack) read() uint8 {
+	value := s.cpu.memory[s.cpu.sp]
+	s.cpu.sp++
+	return value
+}
+
+func (s stack) write(char uint8) {
+	s.cpu.memory[s.cpu.sp] = char
+	s.cpu.sp--
+}
+
 func fetch(cpu *CPU) uint8 {
 	inst := cpu.memory[cpu.pc]
 	cpu.pc = cpu.pc + 1
@@ -91,7 +107,7 @@ func decode(i uint8) instruction {
 		inst = mem
 	case 5:
 		fmt.Fprint(os.Stderr, "stack\n")
-		inst = stack
+		inst = stacki
 	case 6:
 		fmt.Fprint(os.Stderr, "in\n")
 		inst = in
@@ -175,7 +191,7 @@ func mem(i uint8, cpu *CPU) {
 	}
 }
 
-func stack(i uint8, cpu *CPU) {
+func stacki(i uint8, cpu *CPU) {
 	stacki := i << 3 >> 3
 
 	switch stacki {
