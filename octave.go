@@ -119,6 +119,17 @@ func math(i uint8, cpu *CPU) {
 }
 
 func logic(i uint8, cpu *CPU) {
+	operation := i << 3 >> 7
+	destination := i << 4 >> 6
+	source := i << 6 >> 6
+
+	if operation == 0 {
+		cpu.registers[destination] = cpu.registers[destination] & cpu.registers[source]
+	} else {
+		cpu.registers[destination] = cpu.registers[destination] ^ cpu.registers[source]
+	}
+
+	cpu.result = cpu.registers[destination]
 }
 
 func mem(i uint8, cpu *CPU) {
