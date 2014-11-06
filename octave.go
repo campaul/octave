@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -20,7 +21,7 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
-	cpu.devices[1] = tty{}
+	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
 
 	if err != nil {
 		return
@@ -30,12 +31,6 @@ func main() {
 		inst_byte := fetch(cpu)
 		inst_func := decode(inst_byte)
 		inst_func(inst_byte, cpu)
-
-		//fmt.Printf("R0: %v\n", cpu.registers[0])
-		//fmt.Printf("R1: %v\n", cpu.registers[1])
-		//fmt.Printf("R2: %v\n", cpu.registers[2])
-		//fmt.Printf("R3: %v\n", cpu.registers[3])
-		//fmt.Println("")
 	}
 }
 
@@ -56,10 +51,12 @@ type Device interface {
 }
 
 type tty struct {
+	reader *bufio.Reader
 }
 
 func (t tty) read() uint8 {
-	return 0;
+	b, _ := t.reader.ReadByte()
+	return b
 }
 
 func (t tty) write(char uint8) {
