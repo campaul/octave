@@ -244,8 +244,8 @@ func stacki(i uint8, cpu *CPU) {
 		// Push next address to the stack
 		pc_high := cpu.pc >> 8
 		pc_low := cpu.pc << 8 >> 8
-		cpu.devices[0].write(uint8(pc_high))
 		cpu.devices[0].write(uint8(pc_low))
+		cpu.devices[0].write(uint8(pc_high))
 
 		// Jump
 		cpu.pc = new_pc
