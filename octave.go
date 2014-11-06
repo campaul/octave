@@ -9,7 +9,7 @@ import (
 
 func main() {
 	fmt.Println("Initializing Octave CPU...")
-	cpu := &CPU{running: true}
+	cpu := &CPU{running: true, sp: 65535}
 
 	file, err := os.Open(os.Args[1])
 
@@ -38,6 +38,7 @@ type CPU struct {
 	memory    []uint8
 	registers [4]uint8
 	pc        uint16
+	sp        uint16
 	running   bool
 	result    uint8
 	devices   [8]Device
@@ -165,6 +166,61 @@ func mem(i uint8, cpu *CPU) {
 }
 
 func stack(i uint8, cpu *CPU) {
+	stacki := i << 3 >> 3
+
+	switch stacki {
+		case 0:
+			// add16
+		case 1:
+			// sub16
+		case 2:
+			// mul16
+		case 3:
+			// div16
+		case 4:
+			// mod16
+		case 5:
+			// neg16
+		case 6:
+			// and16
+		case 7:
+			// or16
+		case 8:
+			// xor16
+		case 9:
+			// not16
+		case 10:
+			// add32
+		case 11:
+			// sub32
+		case 12:
+			// mul32
+		case 13:
+			// div32
+		case 14:
+			// mod32
+		case 15:
+			// neg32
+		case 16:
+			// and32
+		case 17:
+			// or32
+		case 18:
+			// xor32
+		case 19:
+			// not32
+		case 20:
+			// call
+		case 21:
+			// trap
+		case 22:
+			// ret
+		case 23:
+			// iret
+		default:
+			// device := stacki - 24
+			// TODO: enable device
+	}
 }
 
 func in(i uint8, cpu *CPU) {
