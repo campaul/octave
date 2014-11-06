@@ -75,20 +75,28 @@ func decode(i uint8) instruction {
 
 	switch i >> 5 {
 	case 0:
+		fmt.Fprint(os.Stderr, "jmp\n")
 		inst = jmp
 	case 1:
+		fmt.Fprint(os.Stderr, "loadi\n")
 		inst = loadi
 	case 2:
+		fmt.Fprint(os.Stderr, "math\n")
 		inst = math
 	case 3:
+		fmt.Fprint(os.Stderr, "logic\n")
 		inst = logic
 	case 4:
+		fmt.Fprint(os.Stderr, "mem\n")
 		inst = mem
 	case 5:
+		fmt.Fprint(os.Stderr, "stack\n")
 		inst = stack
 	case 6:
+		fmt.Fprint(os.Stderr, "in\n")
 		inst = in
 	case 7:
+		fmt.Fprint(os.Stderr, "out\n")
 		inst = out
 	}
 
@@ -107,6 +115,7 @@ func jmp(i uint8, cpu *CPU) {
 
 	if (n==1 && cpu.result < 0) || (z==1 && cpu.result == 0) || (p==1 && cpu.result > 0) {
 		offset := int8(cpu.registers[register])
+		fmt.Fprintf(os.Stderr, "Taking jump to %v\n", offset)
 		cpu.pc = uint16(int32(cpu.pc) + int32(offset))
 	}
 }
@@ -157,9 +166,11 @@ func mem(i uint8, cpu *CPU) {
 
 	if operation == 0 {
 		// LOAD
+		fmt.Fprintf(os.Stderr, "Loading %v\n to R0", address)
 		cpu.registers[0] = cpu.memory[address]
 	} else {
 		// STORE
+		fmt.Fprintf(os.Stderr, "Storing R0 to %v\n", address)
 		cpu.memory[address] = cpu.registers[0]
 	}
 }
