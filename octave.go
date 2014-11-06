@@ -171,6 +171,9 @@ func stack(i uint8, cpu *CPU) {
 }
 
 func in(i uint8, cpu *CPU) {
+	device := i << 5 >> 5
+	destination := i << 3 >> 6
+	cpu.registers[destination] = cpu.devices[device].read()
 }
 
 func out(i uint8, cpu *CPU) {
