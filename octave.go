@@ -20,6 +20,8 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
+	cpu.devices[1] = tty{}
+
 	if err != nil {
 		return
 	}
@@ -29,11 +31,11 @@ func main() {
 		inst_func := decode(inst_byte)
 		inst_func(inst_byte, cpu)
 
-		fmt.Printf("R0: %v\n", cpu.registers[0])
-		fmt.Printf("R1: %v\n", cpu.registers[1])
-		fmt.Printf("R2: %v\n", cpu.registers[2])
-		fmt.Printf("R3: %v\n", cpu.registers[3])
-		fmt.Println("")
+		//fmt.Printf("R0: %v\n", cpu.registers[0])
+		//fmt.Printf("R1: %v\n", cpu.registers[1])
+		//fmt.Printf("R2: %v\n", cpu.registers[2])
+		//fmt.Printf("R3: %v\n", cpu.registers[3])
+		//fmt.Println("")
 	}
 }
 
@@ -43,9 +45,26 @@ type CPU struct {
 	pc        uint16
 	running   bool
 	result    uint8
+	devices   [8]Device
 }
 
 type instruction func(uint8, *CPU)
+
+type Device interface {
+	read() uint8
+	write(uint8)
+}
+
+type tty struct {
+}
+
+func (t tty) read() uint8 {
+	return 0;
+}
+
+func (t tty) write(char uint8) {
+	fmt.Printf("%c", char)
+}
 
 func fetch(cpu *CPU) uint8 {
 	inst := cpu.memory[cpu.pc]
@@ -133,6 +152,19 @@ func logic(i uint8, cpu *CPU) {
 }
 
 func mem(i uint8, cpu *CPU) {
+	operation := i << 3 >> 7
+	destination := i << 4 >> 6
+	source := i << 6 >> 6
+
+	if operation == 0 {
+		// LOAD
+		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[source])
+		cpu.registers[destination] = cpu.memory[address]
+	} else {
+		// STORE
+		address := uint16(cpu.registers[0]) << 8 + uint16(cpu.registers[destination])
+		cpu.memory[address] = cpu.registers[source]
+	}
 }
 
 func stack(i uint8, cpu *CPU) {
@@ -142,6 +174,9 @@ func in(i uint8, cpu *CPU) {
 }
 
 func out(i uint8, cpu *CPU) {
+	device := i << 3 >> 5
+	source := i << 6 >> 6
+	cpu.devices[device].write(cpu.registers[source])
 }
 
 func illegal(i uint8, cpu *CPU) {
