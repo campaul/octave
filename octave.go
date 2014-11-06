@@ -129,7 +129,7 @@ func jmp(i uint8, cpu *CPU) {
 	z := i << 6 >> 7
 	p := i << 7 >> 7
 
-	if (n==1 && cpu.result < 0) || (z==1 && cpu.result == 0) || (p==1 && cpu.result > 0) {
+	if (n == 1 && cpu.result < 0) || (z == 1 && cpu.result == 0) || (p == 1 && cpu.result > 0) {
 		offset := int8(cpu.registers[register])
 		fmt.Fprintf(os.Stderr, "Taking jump to %v\n", offset)
 		cpu.pc = uint16(int32(cpu.pc) + int32(offset))
@@ -178,7 +178,7 @@ func mem(i uint8, cpu *CPU) {
 	operation := i << 3 >> 7
 	address_high := i << 4 >> 6
 	address_low := i << 6 >> 6
-	address := uint16(cpu.registers[address_high]) << 8 + uint16(cpu.registers[address_low])
+	address := uint16(cpu.registers[address_high])<<8 + uint16(cpu.registers[address_low])
 
 	if operation == 0 {
 		// LOAD
@@ -195,57 +195,75 @@ func stacki(i uint8, cpu *CPU) {
 	stacki := i << 3 >> 3
 
 	switch stacki {
-		case 0:
-			// add16
-		case 1:
-			// sub16
-		case 2:
-			// mul16
-		case 3:
-			// div16
-		case 4:
-			// mod16
-		case 5:
-			// neg16
-		case 6:
-			// and16
-		case 7:
-			// or16
-		case 8:
-			// xor16
-		case 9:
-			// not16
-		case 10:
-			// add32
-		case 11:
-			// sub32
-		case 12:
-			// mul32
-		case 13:
-			// div32
-		case 14:
-			// mod32
-		case 15:
-			// neg32
-		case 16:
-			// and32
-		case 17:
-			// or32
-		case 18:
-			// xor32
-		case 19:
-			// not32
-		case 20:
-			// call
-		case 21:
-			// trap
-		case 22:
-			// ret
-		case 23:
-			// iret
-		default:
-			// device := stacki - 24
-			// TODO: enable device
+	case 0:
+		// add16
+	case 1:
+		// sub16
+	case 2:
+		// mul16
+	case 3:
+		// div16
+	case 4:
+		// mod16
+	case 5:
+		// neg16
+	case 6:
+		// and16
+	case 7:
+		// or16
+	case 8:
+		// xor16
+	case 9:
+		// not16
+	case 10:
+		// add32
+	case 11:
+		// sub32
+	case 12:
+		// mul32
+	case 13:
+		// div32
+	case 14:
+		// mod32
+	case 15:
+		// neg32
+	case 16:
+		// and32
+	case 17:
+		// or32
+	case 18:
+		// xor32
+	case 19:
+		// not32
+	case 20:
+		// Get jump address off the stack
+		new_pc_high := cpu.devices[0].read()
+		new_pc_low := cpu.devices[0].read()
+		new_pc := uint16(new_pc_high)<<8 + uint16(new_pc_low)
+
+		// Push next address to the stack
+		pc_high := cpu.pc >> 8
+		pc_low := cpu.pc << 8 >> 8
+		cpu.devices[0].write(uint8(pc_high))
+		cpu.devices[0].write(uint8(pc_low))
+
+		// Jump
+		cpu.pc = new_pc
+	case 21:
+		// trap
+	case 22:
+		// Get return address off the stack
+		pc_high := cpu.devices[0].read()
+		pc_low := cpu.devices[0].read()
+		pc := uint16(pc_high)<<8 + uint16(pc_low)
+
+		// Jump
+		cpu.pc = pc
+	case 23:
+		// iret
+	default:
+		// device := stacki - 24
+		// TODO: enable device
 	}
 }
 
