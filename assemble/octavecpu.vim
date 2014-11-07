@@ -22,15 +22,19 @@ syn keyword octaveInstruction STACKOP
 syn keyword octaveInstruction IN OUT
 syn keyword octaveInstruction PUSH MOV
 syn keyword octaveInstruction NZP
+syn keyword octaveInstruction BYTE BYTES
 
 syn keyword octaveRegister R0 R1 R2 R3
 
 syn match   octaveComment /;.*$/
-syn match   octaveLabel /[-a-zA-Z$._][-a-zA-Z$._0-9]*:/
+syn match   octaveLabelIdentifier /[a-zA-z]/
+syn match   octaveLabel /[a-zA-Z]*:/
 
 syn match   octaveConstant /\d\+/
 syn match   octaveConstant /0x\x\x/
 syn match   octaveConstant /0x\x/
+
+syn region  octaveString start=/"/ skip=/\\"/ end=/"/
 
 if version >= 508 || !exists("did_c_syn_inits")
   if version < 508
@@ -45,6 +49,8 @@ if version >= 508 || !exists("did_c_syn_inits")
   HiLink octaveComment Comment
   HiLink octaveLabel Label
   HiLink octaveConstant Number
+  HiLink octaveString String
+  HiLink octaveLabelIdentifier Identifier
 
   delcommand HiLink
 endif
