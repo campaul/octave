@@ -50,8 +50,6 @@ func TestLra(t *testing.T) {
 		binaryHelperByte("11100000"),
 		binaryHelperByte("00110000"),
 		binaryHelperByte("00100000"),
-		binaryHelperByte("01110101"),
-		binaryHelperByte("01000100"),
 		binaryHelperByte("11000000"),
 		binaryHelperByte("00001111"),
 	}
