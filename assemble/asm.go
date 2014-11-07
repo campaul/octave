@@ -24,6 +24,7 @@ var codeToFunc = map[string]func(string) instruction{
 	"IN":      assembleDeviceIO,
 	"OUT":     assembleDeviceIO,
 	"BYTE":    assembleByte,
+	"HALT":    assembleHalt,
 }
 
 func Assemble(in io.Reader) (bytes []byte, err error) {
@@ -173,4 +174,8 @@ func assembleByte(i string) instruction {
 		panic(err)
 	}
 	return rawbyte{uint8(val)}
+}
+
+func assembleHalt(i string) instruction {
+	return rawbyte{0}
 }
