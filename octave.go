@@ -156,7 +156,7 @@ func math(i uint8, cpu *CPU) {
 	if operation == 0 {
 		cpu.registers[destination] = cpu.registers[destination] + cpu.registers[source]
 	} else {
-		cpu.registers[destination] = cpu.registers[destination] / cpu.registers[source]
+		cpu.registers[destination] = cpu.registers[source]
 	}
 
 	cpu.result = cpu.registers[destination]
