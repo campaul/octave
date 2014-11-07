@@ -65,11 +65,10 @@ func (i lra) translate(labels map[string]uint, pc uint) []instruction {
 	insts := []instruction{}
 	insts = append(insts, devio{out, 0, 0})
 	insts = append(insts, loadimm{offset}.translate(labels, pc)...)
-	insts = append(insts, mov{i.dest, 0}.translate(labels, pc)...)
 	insts = append(insts, devio{in, 0, 0})
 	return insts
 }
 
 func (i lra) size() uint {
-	return 1 + 2 + 2 + 1
+	return 1 + 2 + 1
 }
