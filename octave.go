@@ -9,7 +9,7 @@ import (
 
 func main() {
 	fmt.Println("Initializing Octave CPU...")
-	cpu := &CPU{running: true, sp: 65535}
+	cpu := &CPU{running: true, sp: 0xFFFF}
 
 	file, err := os.Open(os.Args[1])
 
@@ -19,7 +19,11 @@ func main() {
 
 	defer file.Close()
 
-	cpu.memory, err = ioutil.ReadAll(file)
+	mem, err := ioutil.ReadAll(file)
+
+	for i, val := range mem {
+		cpu.memory[i] = val
+	}
 
 	cpu.stack = stack{cpu}
 	cpu.devices[0] = cpu.stack
@@ -37,7 +41,7 @@ func main() {
 }
 
 type CPU struct {
-	memory    []uint8
+	memory    [1 << 16]uint8
 	registers [4]uint8
 	pc        uint16
 	sp        uint16
@@ -72,8 +76,8 @@ type stack struct {
 }
 
 func (s stack) read() uint8 {
-	value := s.cpu.memory[s.cpu.sp]
 	s.cpu.sp++
+	value := s.cpu.memory[s.cpu.sp]
 	return value
 }
 
