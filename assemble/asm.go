@@ -32,14 +32,25 @@ func Assemble(in io.Reader) (bytes []byte, err error) {
 		}
 	}()*/
 	r := bufio.NewReader(in)
-	instructions := convertToInstructions(r)
+	instructions, _, labels := convertToInstructions(r)
+	pc := uint(0)
 	for _, i := range instructions {
-		bytes = append(bytes, i.assemble())
+		switch i := i.(type) {
+		case instruction:
+			bytes = append(bytes, i.assemble())
+			pc++
+		case pseudoinst:
+			for _, inst := range i.translate(labels, pc) {
+				bytes = append(bytes, inst.assemble())
+			}
+			pc += i.size()
+		}
 	}
 	return bytes, nil
 }
 
-func convertToInstructions(in *bufio.Reader) (instructions []instruction) {
+func convertToInstructions(in *bufio.Reader) (instructions []interface{}, size uint, labels map[string]uint) {
+	labels = make(map[string]uint)
 	for line, err := in.ReadString('\n'); err != io.EOF; line, err = in.ReadString('\n') {
 		line = strings.TrimSpace(line)
 		if err != nil {
@@ -51,9 +62,16 @@ func convertToInstructions(in *bufio.Reader) (instructions []instruction) {
 		}
 		fields := strings.Fields(line)
 
-		insts := tryPseudo(line).translate()
-		if len(insts) != 0 {
-			instructions = append(instructions, insts...)
+		label := tryLabel(line)
+		if label != "" {
+			labels[label] = size
+			continue
+		}
+
+		pinst := tryPseudo(line)
+		if pinst.size() != 0 {
+			size += pinst.size()
+			instructions = append(instructions, pinst)
 			continue
 		}
 
@@ -62,6 +80,7 @@ func convertToInstructions(in *bufio.Reader) (instructions []instruction) {
 			panic(errors.New(fmt.Sprintf("'%v' is not a valid assembly instruction", fields[0])))
 		}
 		instructions = append(instructions, asmFunc(line))
+		size++
 	}
 	return
 }
