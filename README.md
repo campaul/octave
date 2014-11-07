@@ -76,3 +76,40 @@ Format     | Operation
 ---------- | -------------
 110 RD DV  | RD <- DEV[DV]
 111 DV RS  | DEV[DV] <- RS
+
+## Assembly Hello World
+
+```
+; Octave CPU - Hello World
+
+; R2R1 ← string
+LAA R2, R1, string
+
+loop:
+; R0 ← [R2R1]
+LOAD R2, R1
+
+; IF R0 == 0, JMP exit
+XOR R3, R3
+ADD R3, R0
+LRA exit
+JMP R0 Z
+
+; PRINT R3
+OUT R3, 1
+
+; INC R1
+LOADI 0x01
+ADD R1, R0
+
+; JMP loop
+LRA loop
+JMP R0 NZP
+
+exit:
+HALT
+
+string:
+BYTES "Hello world!\n"
+BYTE 0x00
+```
