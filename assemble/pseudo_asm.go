@@ -2,6 +2,7 @@ package assemble
 
 import (
 	"errors"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ var pseudoMap = map[string]func(string) pseudoinst{
 	"LAA":   generateLaa,
 	"BYTES": generateBytes,
 	"FILL":  generateFill,
+	"LJMP":  generateLjmp,
 }
 
 func tryPseudo(line string) pseudoinst {
@@ -29,10 +31,10 @@ func tryPseudo(line string) pseudoinst {
 
 func generateLoadi(line string) pseudoinst {
 	l := loadimm{}
-	re := regexp.MustCompile("LOADI (0x[0-9A-F]{1,2})")
+	re := regexp.MustCompile("LOADI (0x[0-9A-F]{1,2}|[0-9]+)")
 	matches := re.FindStringSubmatch(line)
 	if matches == nil {
-		panic(errors.New("not a LOADI"))
+		panic(errors.New(fmt.Sprintf("'%v' not a LOADI", line)))
 	}
 	val, err := strconv.ParseUint(matches[1], 0, 8)
 	if err != nil {
@@ -90,4 +92,18 @@ func generateFill(line string) pseudoinst {
 		panic(err)
 	}
 	return fill{uint16(num)}
+}
+
+func generateLjmp(line string) pseudoinst {
+	lj := ljump{}
+	re := regexp.MustCompile("LJMP ([A-Za-z]+) (N|)(Z|)(P|)")
+	matches := re.FindStringSubmatch(line)
+	if matches == nil {
+		panic(errors.New(fmt.Sprintf("%v, not a LJMP", line)))
+	}
+	lj.label = matches[1]
+	lj.neg = matches[2] == "N"
+	lj.zero = matches[3] == "Z"
+	lj.pos = matches[4] == "P"
+	return lj
 }
