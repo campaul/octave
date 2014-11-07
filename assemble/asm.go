@@ -23,6 +23,7 @@ var codeToFunc = map[string]func(string) instruction{
 	"STACKOP": assembleStackop,
 	"IN":      assembleDeviceIO,
 	"OUT":     assembleDeviceIO,
+	"BYTE":    assembleByte,
 }
 
 func Assemble(in io.Reader) (bytes []byte, err error) {
@@ -159,4 +160,17 @@ func assembleDeviceIO(i string) instruction {
 	in.register = convertRegisterNum(matches[2])
 	in.device = convertDeviceNum(matches[3])
 	return in
+}
+
+func assembleByte(i string) instruction {
+	re := regexp.MustCompile("BYTE (.+)")
+	matches := re.FindStringSubmatch(i)
+	if matches == nil {
+		panic(errors.New("not a BYTE"))
+	}
+	val, err := strconv.ParseUint(matches[1], 0, 8)
+	if err != nil {
+		panic(err)
+	}
+	return rawbyte{uint8(val)}
 }

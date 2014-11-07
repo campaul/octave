@@ -121,3 +121,16 @@ func TestAssembleDeviceIO(t *testing.T) {
 		}
 	}
 }
+
+func TestAssembleByte(t *testing.T) {
+	tests := []testcase{
+		testcase{"BYTE 0xFF", binaryHelperByte("11111111")},
+		testcase{"BYTE 32", binaryHelperByte("00100000")},
+	}
+	for _, test := range tests {
+		b := assembleByte(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out)
+		}
+	}
+}

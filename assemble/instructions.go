@@ -112,12 +112,10 @@ func (i devio) assemble() (b byte) {
 	return
 }
 
-/*
 type rawbyte struct {
 	value uint8
 }
 
 func (i rawbyte) assemble() byte {
-	return value
+	return i.value
 }
-*/
