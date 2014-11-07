@@ -2,6 +2,7 @@ LJMP trampoline NZP
 
 code:
 	BYTES "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+	;BYTES ".[-]>."
 	;BYTES ".>.>.>.>.>"
 	BYTE 0x0
 
@@ -9,29 +10,28 @@ trampoline:
 	LJMP start NZP
 
 data:
-	;BYTES "fart\n"
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
-    BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
+	BYTE 0x0
 
 start:
 	LAA R2, R1, code
@@ -146,7 +146,6 @@ handleOpenBrace:
 	LJMP incProg NP
 
 	OUT R3, 0
-	; [R3] == 0
 	; Find next matching ]
 	LOADI 0x01
 	MOV R3, R0
@@ -184,28 +183,57 @@ handleOpenBrace:
 
 		LJMP openBraceLoop NZP
 
-	exitBraceLoop:
-		IN R3, 0
-		LJMP incProgB NZP
+exitBraceLoop:
+	IN R3, 0
+	LJMP incProg NZP
 
 handleCloseBrace:
 	XOR R2, R2
 	LOAD R2, R3
 	AND R0, R0
-	LJMP incProgB Z
+	LJMP incProg Z
 
-	LJMP exit NZP
+	OUT R3, 0
+	; Find prev matching [
+	LOADI 0x01
+	MOV R3, R0
+
+	closeBraceLoop:
+		LOADI 0xFF
+		ADD R1, R0
+
+		XOR R2, R2
+		LOAD R2, R1
+		MOV R2, R0
+
+		; R2 = [R1]
+
+		LOADI 0xA3 ; -5D
+		ADD R0, R2
+		LJMP closeBraceInc Z
+
+		LOADI 0xA5 ; -5B
+		ADD R0, R2
+		LJMP closeBraceDec Z
+
+		LJMP closeBraceLoop NZP
+
+	closeBraceInc:
+		LOADI 0x01
+		ADD R3, R0
+
+		LJMP closeBraceLoop NZP
+
+	closeBraceDec:
+		LOADI 0xFF
+		ADD R3, R0
+		LJMP exitBraceLoop Z
+
+		LJMP closeBraceLoop NZP
 
 handlePrint:
 	XOR R2, R2
 	LOAD R2, R3
 	OUT R0, 1
 
-	LJMP incProgB NZP
-
-incProgB:
-	LOADI 0x01
-	ADD R1, R0
-
-	LJMP bf NZP
-
+	LJMP incProg NZP
