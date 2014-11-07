@@ -7,11 +7,13 @@ import (
 	"strings"
 )
 
-var pseudoMap = map[string]func(string) psuedoinst{
-	"MOV": generateMov,
+var pseudoMap = map[string]func(string) pseudoinst{
+	"MOV":   generateMov,
+	"LOADI": generateLoadi,
+	"LRA":   generateLra,
 }
 
-func tryPseudo(line string) psuedoinst {
+func tryPseudo(line string) pseudoinst {
 	fields := strings.Fields(line)
 	if len(fields) == 0 {
 		return dummy{}
@@ -23,7 +25,7 @@ func tryPseudo(line string) psuedoinst {
 	return f(line)
 }
 
-func generateMov(line string) psuedoinst {
+func generateMov(line string) pseudoinst {
 	m := mov{}
 	re := regexp.MustCompile("MOV R([0-3]), R([0-3])")
 	matches := re.FindStringSubmatch(line)
@@ -35,7 +37,7 @@ func generateMov(line string) psuedoinst {
 	return m
 }
 
-func generateLoadi(line string) psuedoinst {
+func generateLoadi(line string) pseudoinst {
 	l := loadimm{}
 	re := regexp.MustCompile("LOADI (0x[0-9A-F]{1,2})")
 	matches := re.FindStringSubmatch(line)
@@ -47,5 +49,17 @@ func generateLoadi(line string) psuedoinst {
 		panic(err)
 	}
 	l.val = uint8(val)
+	return l
+}
+
+func generateLra(line string) pseudoinst {
+	l := lra{}
+	re := regexp.MustCompile("LRA R([0-3]), ([A-Za-z]+)")
+	matches := re.FindStringSubmatch(line)
+	if matches == nil {
+		panic(errors.New("not an LRA"))
+	}
+	l.dest = convertRegisterNum(matches[1])
+	l.label = matches[2]
 	return l
 }
