@@ -79,7 +79,7 @@ Format     | Operation
 
 ## Assembly Hello World
 
-```
+```asm
 ; Octave CPU - Hello World
 
 ; R2R1 ← string
