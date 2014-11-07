@@ -46,3 +46,16 @@ func TestBytes(t *testing.T) {
 		t.Error("Got", bytesToAsm(bytes), "expected", bytesToAsm(expected))
 	}
 }
+
+func TestFill(t *testing.T) {
+	bytes, err := Assemble(strings.NewReader(`
+	FILL 5
+	`))
+	if err != nil {
+		t.Error("Unexpected error", err)
+	}
+	expected := []byte{0, 0, 0, 0, 0}
+	if !reflect.DeepEqual(bytes, expected) {
+		t.Error("Got", bytesToAsm(bytes), "expected", bytesToAsm(expected))
+	}
+}

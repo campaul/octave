@@ -113,3 +113,18 @@ func (i rawbytes) translate(labels map[string]uint, pc uint) (out []instruction)
 func (i rawbytes) size() uint {
 	return uint(len(i.bytes))
 }
+
+type fill struct {
+	num uint16
+}
+
+func (in fill) translate(labels map[string]uint, pc uint) (out []instruction) {
+	for i := 0; i < int(in.num); i++ {
+		out = append(out, rawbyte{0})
+	}
+	return
+}
+
+func (i fill) size() uint {
+	return uint(i.num)
+}

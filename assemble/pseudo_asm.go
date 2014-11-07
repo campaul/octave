@@ -12,6 +12,7 @@ var pseudoMap = map[string]func(string) pseudoinst{
 	"LRA":   generateLra,
 	"LAA":   generateLaa,
 	"BYTES": generateBytes,
+	"FILL":  generateFill,
 }
 
 func tryPseudo(line string) pseudoinst {
@@ -76,4 +77,17 @@ func generateBytes(line string) pseudoinst {
 		panic(err)
 	}
 	return rawbytes{[]byte(s)}
+}
+
+func generateFill(line string) pseudoinst {
+	re := regexp.MustCompile("FILL[ \\t]+([0-9]+)")
+	matches := re.FindStringSubmatch(line)
+	if matches == nil {
+		panic(errors.New("not a FILL"))
+	}
+	num, err := strconv.ParseUint(matches[1], 10, 16)
+	if err != nil {
+		panic(err)
+	}
+	return fill{uint16(num)}
 }
