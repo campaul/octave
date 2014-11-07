@@ -73,5 +73,6 @@ Format     | Operation
 ### Device IO
 
 Format     | Operation
+---------- | -------------
 110 RD DV  | RD <- DEV[DV]
 111 DV RS  | DEV[DV] <- RS
