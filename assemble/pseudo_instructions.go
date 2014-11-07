@@ -72,3 +72,18 @@ func (i lra) translate(labels map[string]uint, pc uint) []instruction {
 func (i lra) size() uint {
 	return 1 + 2 + 1
 }
+
+type rawbytes struct {
+	bytes []byte
+}
+
+func (i rawbytes) translate(labels map[string]uint, pc uint) (out []instruction) {
+	for _, b := range i.bytes {
+		out = append(out, rawbyte{b})
+	}
+	return
+}
+
+func (i rawbytes) size() uint {
+	return uint(len(i.bytes))
+}

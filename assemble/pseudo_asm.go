@@ -11,6 +11,7 @@ var pseudoMap = map[string]func(string) pseudoinst{
 	"MOV":   generateMov,
 	"LOADI": generateLoadi,
 	"LRA":   generateLra,
+	"BYTES": generateBytes,
 }
 
 func tryPseudo(line string) pseudoinst {
@@ -62,4 +63,17 @@ func generateLra(line string) pseudoinst {
 	l.dest = convertRegisterNum(matches[1])
 	l.label = matches[2]
 	return l
+}
+
+func generateBytes(line string) pseudoinst {
+	re := regexp.MustCompile("BYTES (\".*\")")
+	matches := re.FindStringSubmatch(line)
+	if matches == nil {
+		panic(errors.New("not a BYTES"))
+	}
+	s, err := strconv.Unquote(matches[1])
+	if err != nil {
+		panic(err)
+	}
+	return rawbytes{[]byte(s)}
 }

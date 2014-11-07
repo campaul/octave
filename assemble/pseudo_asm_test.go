@@ -66,3 +66,16 @@ func bytesToAsm(bytes []byte) string {
 	str += "]"
 	return str
 }
+
+func TestBytes(t *testing.T) {
+	bytes, err := Assemble(strings.NewReader(`
+	BYTES "butt\n"
+	`))
+	if err != nil {
+		t.Error("Unexpected error", err)
+	}
+	expected := []byte("butt\n")
+	if !reflect.DeepEqual(bytes, expected) {
+		t.Error("Got", bytesToAsm(bytes), "expected", bytesToAsm(expected))
+	}
+}
