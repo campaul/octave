@@ -214,113 +214,68 @@ func push16(s stack, value uint16) {
 	s.write(byte_1)
 }
 
-func push32(s stack, value uint32) {
-	byte_1 := uint8(value >> 24)
-	byte_2 := uint8(value << 8 >> 24)
-	byte_3 := uint8(value << 16 >> 24)
-	byte_4 := uint8(value << 24 >> 24)
-	s.write(byte_4)
-	s.write(byte_3)
-	s.write(byte_2)
-	s.write(byte_1)
-}
-
 func stacki(i uint8, cpu *CPU) {
 	stacki := i << 3 >> 3
 
 	switch stacki {
 	case 0:
 		// add16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a+b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a + b)
 	case 1:
 		// sub16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a-b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a - b)
 	case 2:
 		// mul16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a*b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a * b)
 	case 3:
 		// div16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a/b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a / b)
 	case 4:
 		// mod16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a%b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a % b)
 	case 5:
 		// neg16
+		a := cpu.stack.read()
+		cpu.stack.write(uint8(int8(a) * -1))
 	case 6:
 		// and16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a&b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a & b)
 	case 7:
 		// or16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a|b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a | b)
 	case 8:
 		// xor16
-		b := pop16(cpu.stack)
-		a := pop16(cpu.stack)
-		push16(cpu.stack, a^b)
+		b := cpu.stack.read()
+		a := cpu.stack.read()
+		cpu.stack.write(a ^ b)
 	case 9:
 		// not16
-		a := pop16(cpu.stack)
-		push16(cpu.stack, ^a)
+		a := cpu.stack.read()
+		cpu.stack.write(^a)
 	case 10:
-		// add32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a+b)
 	case 11:
-		// sub32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a-b)
 	case 12:
-		// mul32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a*b)
 	case 13:
-		// div32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a/b)
 	case 14:
-		// mod32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a%b)
 	case 15:
-		// neg32
 	case 16:
-		// and32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a&b)
 	case 17:
-		// or32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a|b)
 	case 18:
-		// xor32
-		b := pop32(cpu.stack)
-		a := pop32(cpu.stack)
-		push32(cpu.stack, a^b)
 	case 19:
-		// not32
-		a := pop32(cpu.stack)
-		push32(cpu.stack, ^a)
 	case 20:
 		// Get jump address off the stack
 		new_pc_high := cpu.devices[0].read()
