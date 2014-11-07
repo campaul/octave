@@ -98,11 +98,7 @@ func (i laa) highR0() bool {
 }
 
 func (i laa) size() uint {
-	if i.hasR0() {
-		return 4
-	} else {
-		return 6
-	}
+	return 4
 }
 
 type rawbytes struct {
