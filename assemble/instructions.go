@@ -2,7 +2,7 @@ package assemble
 
 const (
 	add   = 0x4 // 0100
-	div   = 0x5 // 0101
+	mov   = 0x5 // 0101
 	and   = 0x6 // 0110
 	xor   = 0x7 // 0111
 	load  = 0x8 // 1000
@@ -16,7 +16,7 @@ const (
 
 var strToOpcode = map[string]uint8{
 	"ADD":   add,
-	"DIV":   div,
+	"MOV":   mov,
 	"AND":   and,
 	"XOR":   xor,
 	"LOAD":  load,

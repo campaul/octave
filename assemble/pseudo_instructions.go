@@ -20,22 +20,6 @@ func (d dummy) size() uint {
 	return 0
 }
 
-type mov struct {
-	dest uint8
-	src  uint8
-}
-
-func (i mov) translate(labels map[string]uint, pc uint) []instruction {
-	return []instruction{
-		tworeg{xor, i.dest, i.dest},
-		tworeg{add, i.dest, i.src},
-	}
-}
-
-func (i mov) size() uint {
-	return 2
-}
-
 type loadimm struct {
 	val uint8
 }
@@ -58,10 +42,10 @@ type lra struct {
 
 func (i lra) translate(labels map[string]uint, pc uint) []instruction {
 	addr, ok := labels[i.label]
-	offset := uint8(int(addr) - int(pc+i.size()))
 	if !ok {
 		panic(errors.New(fmt.Sprint("%v label not found", i.label)))
 	}
+	offset := uint8(int(addr) - int(pc+i.size()))
 	insts := []instruction{}
 	insts = append(insts, devio{out, 0, 0})
 	insts = append(insts, loadimm{offset}.translate(labels, pc)...)
@@ -71,6 +55,56 @@ func (i lra) translate(labels map[string]uint, pc uint) []instruction {
 
 func (i lra) size() uint {
 	return 1 + 2 + 1
+}
+
+type laa struct {
+	highreg uint8
+	lowreg  uint8
+	label   string
+}
+
+func (i laa) translate(labels map[string]uint, pc uint) []instruction {
+	addr, ok := labels[i.label]
+	if !ok {
+		panic(errors.New(fmt.Sprint("%v label not found", i.label)))
+	}
+	insts := []instruction{}
+	if i.hasR0() {
+		if !i.highR0() {
+			insts = append(insts, loadimm{uint8((addr & 0xFF00) >> 8)}.translate(labels, pc)...)
+			insts = append(insts, tworeg{mov, i.highreg, 0})
+		}
+		insts = append(insts, loadimm{uint8(addr & 0xFF)}.translate(labels, pc)...)
+		insts = append(insts, tworeg{mov, i.lowreg, 0})
+		if i.highR0() {
+			insts = append(insts, loadimm{uint8((addr & 0xFF00) >> 8)}.translate(labels, pc)...)
+			insts = append(insts, tworeg{mov, i.highreg, 0})
+		}
+	} else {
+		insts = append(insts, devio{out, 0, 0})
+		insts = append(insts, loadimm{uint8((addr & 0xFF00) >> 8)}.translate(labels, pc)...)
+		insts = append(insts, tworeg{mov, i.highreg, 0})
+		insts = append(insts, loadimm{uint8(addr & 0xFF)}.translate(labels, pc)...)
+		insts = append(insts, tworeg{mov, i.lowreg, 0})
+		insts = append(insts, devio{in, 0, 0})
+	}
+	return insts
+}
+
+func (i laa) hasR0() bool {
+	return i.highreg != 0 || i.lowreg != 0
+}
+
+func (i laa) highR0() bool {
+	return i.highreg == 0
+}
+
+func (i laa) size() uint {
+	if i.hasR0() {
+		return 4
+	} else {
+		return 6
+	}
 }
 
 type rawbytes struct {

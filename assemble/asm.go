@@ -15,7 +15,7 @@ var codeToFunc = map[string]func(string) instruction{
 	"LOADIH":  assembleLoadi,
 	"LOADIL":  assembleLoadi,
 	"ADD":     assembleTwoRegister,
-	"DIV":     assembleTwoRegister,
+	"MOV":     assembleTwoRegister,
 	"AND":     assembleTwoRegister,
 	"XOR":     assembleTwoRegister,
 	"LOAD":    assembleTwoRegister,
@@ -123,10 +123,10 @@ func assembleLoadi(i string) instruction {
 
 func assembleTwoRegister(i string) instruction {
 	in := tworeg{}
-	re := regexp.MustCompile("(ADD|DIV|AND|XOR|LOAD|STORE) R([0-3]), R([0-3])")
+	re := regexp.MustCompile("(ADD|MOV|AND|XOR|LOAD|STORE) R([0-3]), R([0-3])")
 	matches := re.FindStringSubmatch(i)
 	if matches == nil {
-		panic(errors.New("not a (ADD|DIV|AND|XOR|LOAD|STORE)"))
+		panic(errors.New(i + " not a (ADD|MOV|AND|XOR|LOAD|STORE)"))
 	}
 	in.opcode = strToOpcode[matches[1]]
 	in.dest = convertRegisterNum(matches[2])

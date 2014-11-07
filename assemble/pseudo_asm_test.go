@@ -12,18 +12,6 @@ type ptestcase struct {
 	out []instruction
 }
 
-func TestGenerateMov(t *testing.T) {
-	tests := []ptestcase{
-		ptestcase{"MOV R0, R3", []instruction{tworeg{xor, 0, 0}, tworeg{add, 0, 3}}},
-	}
-	for _, test := range tests {
-		out := generateMov(test.in).translate(map[string]uint{}, 0)
-		if !reflect.DeepEqual(out, test.out) {
-			t.Error("Got", out, "expected", test.out)
-		}
-	}
-}
-
 func TestGenerateLoadi(t *testing.T) {
 	tests := []ptestcase{
 		ptestcase{"LOADI 0xFF", []instruction{loadi{true, 0xF}, loadi{false, 0xF}}},

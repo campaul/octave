@@ -8,9 +8,9 @@ import (
 )
 
 var pseudoMap = map[string]func(string) pseudoinst{
-	"MOV":   generateMov,
 	"LOADI": generateLoadi,
 	"LRA":   generateLra,
+	"LAA":   generateLaa,
 	"BYTES": generateBytes,
 }
 
@@ -24,18 +24,6 @@ func tryPseudo(line string) pseudoinst {
 		return dummy{}
 	}
 	return f(line)
-}
-
-func generateMov(line string) pseudoinst {
-	m := mov{}
-	re := regexp.MustCompile("MOV R([0-3]), R([0-3])")
-	matches := re.FindStringSubmatch(line)
-	if matches == nil {
-		panic(errors.New("not a MOV"))
-	}
-	m.dest = convertRegisterNum(matches[1])
-	m.src = convertRegisterNum(matches[2])
-	return m
 }
 
 func generateLoadi(line string) pseudoinst {
@@ -62,6 +50,19 @@ func generateLra(line string) pseudoinst {
 	}
 	l.dest = convertRegisterNum(matches[1])
 	l.label = matches[2]
+	return l
+}
+
+func generateLaa(line string) pseudoinst {
+	l := laa{}
+	re := regexp.MustCompile("LAA R([0-3]), R([0-3]), ([A-Za-z]+)")
+	matches := re.FindStringSubmatch(line)
+	if matches == nil {
+		panic(errors.New("not an LAA"))
+	}
+	l.highreg = convertRegisterNum(matches[1])
+	l.lowreg = convertRegisterNum(matches[2])
+	l.label = matches[3]
 	return l
 }
 

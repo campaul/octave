@@ -18,7 +18,7 @@ func TestAssemble(t *testing.T) {
 		LOADIH 0xF
 		LOADIL 0xF
 		ADD R0, R0
-		DIV R3, R3
+		MOV R3, R3
 		AND R0, R0
 		XOR R3, R3
 		LOAD R0, R0
@@ -83,7 +83,7 @@ func TestAssembleLoadi(t *testing.T) {
 func TestAssembleTwoRegister(t *testing.T) {
 	tests := []testcase{
 		testcase{"ADD R0, R0", binaryHelperByte("01000000")},
-		testcase{"DIV R1, R1", binaryHelperByte("01010101")},
+		testcase{"MOV R1, R1", binaryHelperByte("01010101")},
 		testcase{"AND R2, R2", binaryHelperByte("01101010")},
 		testcase{"XOR R3, R3", binaryHelperByte("01111111")},
 		testcase{"LOAD R0, R3", binaryHelperByte("10000011")},
