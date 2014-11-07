@@ -21,7 +21,7 @@ syn keyword octaveInstruction LRA LAA
 syn keyword octaveInstruction STACKOP
 syn keyword octaveInstruction IN OUT
 syn keyword octaveInstruction PUSH MOV
-syn keyword octaveInstruction NZP
+syn keyword octaveInstruction NZP NZ NP ZP N Z P
 syn keyword octaveInstruction BYTE BYTES
 
 syn keyword octaveRegister R0 R1 R2 R3
