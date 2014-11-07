@@ -45,16 +45,14 @@ func (i lra) translate(labels map[string]uint, pc uint) []instruction {
 	if !ok {
 		panic(errors.New(fmt.Sprint("%v label not found", i.label)))
 	}
-	offset := uint8(int(addr) - int(pc+i.size()))
+	offset := uint8(int(addr) - int(pc+i.size()+1))
 	insts := []instruction{}
-	insts = append(insts, devio{out, 0, 0})
 	insts = append(insts, loadimm{offset}.translate(labels, pc)...)
-	insts = append(insts, devio{in, 0, 0})
 	return insts
 }
 
 func (i lra) size() uint {
-	return 1 + 2 + 1
+	return 2
 }
 
 type laa struct {
@@ -98,7 +96,7 @@ func (i laa) highR0() bool {
 }
 
 func (i laa) size() uint {
-	return 4
+	return 2 + 1 + 2 + 1
 }
 
 type rawbytes struct {
