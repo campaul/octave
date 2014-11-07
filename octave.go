@@ -21,6 +21,8 @@ func main() {
 
 	cpu.memory, err = ioutil.ReadAll(file)
 
+	cpu.stack = stack{cpu}
+	cpu.devices[0] = cpu.stack
 	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
 
 	if err != nil {
@@ -42,6 +44,7 @@ type CPU struct {
 	running   bool
 	result    uint8
 	devices   [8]Device
+	stack     stack
 }
 
 type instruction func(uint8, *CPU)
@@ -64,6 +67,21 @@ func (t tty) write(char uint8) {
 	fmt.Printf("%c", char)
 }
 
+type stack struct {
+	cpu *CPU
+}
+
+func (s stack) read() uint8 {
+	value := s.cpu.memory[s.cpu.sp]
+	s.cpu.sp++
+	return value
+}
+
+func (s stack) write(char uint8) {
+	s.cpu.memory[s.cpu.sp] = char
+	s.cpu.sp--
+}
+
 func fetch(cpu *CPU) uint8 {
 	inst := cpu.memory[cpu.pc]
 	cpu.pc = cpu.pc + 1
@@ -75,20 +93,28 @@ func decode(i uint8) instruction {
 
 	switch i >> 5 {
 	case 0:
+		fmt.Fprint(os.Stderr, "jmp\n")
 		inst = jmp
 	case 1:
+		fmt.Fprint(os.Stderr, "loadi\n")
 		inst = loadi
 	case 2:
+		fmt.Fprint(os.Stderr, "math\n")
 		inst = math
 	case 3:
+		fmt.Fprint(os.Stderr, "logic\n")
 		inst = logic
 	case 4:
+		fmt.Fprint(os.Stderr, "mem\n")
 		inst = mem
 	case 5:
-		inst = stack
+		fmt.Fprint(os.Stderr, "stack\n")
+		inst = stacki
 	case 6:
+		fmt.Fprint(os.Stderr, "in\n")
 		inst = in
 	case 7:
+		fmt.Fprint(os.Stderr, "out\n")
 		inst = out
 	}
 
@@ -105,8 +131,9 @@ func jmp(i uint8, cpu *CPU) {
 	z := i << 6 >> 7
 	p := i << 7 >> 7
 
-	if (n==1 && cpu.result < 0) || (z==1 && cpu.result == 0) || (p==1 && cpu.result > 0) {
+	if (n == 1 && cpu.result < 0) || (z == 1 && cpu.result == 0) || (p == 1 && cpu.result > 0) {
 		offset := int8(cpu.registers[register])
+		fmt.Fprintf(os.Stderr, "Taking jump to %v\n", offset)
 		cpu.pc = uint16(int32(cpu.pc) + int32(offset))
 	}
 }
@@ -153,72 +180,176 @@ func mem(i uint8, cpu *CPU) {
 	operation := i << 3 >> 7
 	address_high := i << 4 >> 6
 	address_low := i << 6 >> 6
-	address := uint16(cpu.registers[address_high]) << 8 + uint16(cpu.registers[address_low])
+	address := uint16(cpu.registers[address_high])<<8 + uint16(cpu.registers[address_low])
 
 	if operation == 0 {
 		// LOAD
+		fmt.Fprintf(os.Stderr, "Loading %v\n to R0", address)
 		cpu.registers[0] = cpu.memory[address]
 	} else {
 		// STORE
+		fmt.Fprintf(os.Stderr, "Storing R0 to %v\n", address)
 		cpu.memory[address] = cpu.registers[0]
 	}
 }
 
-func stack(i uint8, cpu *CPU) {
+func pop16(s stack) uint16 {
+	byte_1 := s.read()
+	byte_2 := s.read()
+	return uint16(byte_1)<<8 + uint16(byte_2)
+}
+
+func pop32(s stack) uint32 {
+	byte_1 := s.read()
+	byte_2 := s.read()
+	byte_3 := s.read()
+	byte_4 := s.read()
+	return uint32(byte_1)<<24 + uint32(byte_2)<<16 + uint32(byte_3)<<8 + uint32(byte_4)
+}
+
+func push16(s stack, value uint16) {
+	byte_1 := uint8(value >> 8)
+	byte_2 := uint8(value << 8 >> 8)
+	s.write(byte_2)
+	s.write(byte_1)
+}
+
+func push32(s stack, value uint32) {
+	byte_1 := uint8(value >> 24)
+	byte_2 := uint8(value << 8 >> 24)
+	byte_3 := uint8(value << 16 >> 24)
+	byte_4 := uint8(value << 24 >> 24)
+	s.write(byte_4)
+	s.write(byte_3)
+	s.write(byte_2)
+	s.write(byte_1)
+}
+
+func stacki(i uint8, cpu *CPU) {
 	stacki := i << 3 >> 3
 
 	switch stacki {
-		case 0:
-			// add16
-		case 1:
-			// sub16
-		case 2:
-			// mul16
-		case 3:
-			// div16
-		case 4:
-			// mod16
-		case 5:
-			// neg16
-		case 6:
-			// and16
-		case 7:
-			// or16
-		case 8:
-			// xor16
-		case 9:
-			// not16
-		case 10:
-			// add32
-		case 11:
-			// sub32
-		case 12:
-			// mul32
-		case 13:
-			// div32
-		case 14:
-			// mod32
-		case 15:
-			// neg32
-		case 16:
-			// and32
-		case 17:
-			// or32
-		case 18:
-			// xor32
-		case 19:
-			// not32
-		case 20:
-			// call
-		case 21:
-			// trap
-		case 22:
-			// ret
-		case 23:
-			// iret
-		default:
-			// device := stacki - 24
-			// TODO: enable device
+	case 0:
+		// add16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a+b)
+	case 1:
+		// sub16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a-b)
+	case 2:
+		// mul16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a*b)
+	case 3:
+		// div16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a/b)
+	case 4:
+		// mod16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a%b)
+	case 5:
+		// neg16
+	case 6:
+		// and16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a&b)
+	case 7:
+		// or16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a|b)
+	case 8:
+		// xor16
+		b := pop16(cpu.stack)
+		a := pop16(cpu.stack)
+		push16(cpu.stack, a^b)
+	case 9:
+		// not16
+		a := pop16(cpu.stack)
+		push16(cpu.stack, ^a)
+	case 10:
+		// add32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a+b)
+	case 11:
+		// sub32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a-b)
+	case 12:
+		// mul32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a*b)
+	case 13:
+		// div32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a/b)
+	case 14:
+		// mod32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a%b)
+	case 15:
+		// neg32
+	case 16:
+		// and32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a&b)
+	case 17:
+		// or32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a|b)
+	case 18:
+		// xor32
+		b := pop32(cpu.stack)
+		a := pop32(cpu.stack)
+		push32(cpu.stack, a^b)
+	case 19:
+		// not32
+		a := pop32(cpu.stack)
+		push32(cpu.stack, ^a)
+	case 20:
+		// Get jump address off the stack
+		new_pc_high := cpu.devices[0].read()
+		new_pc_low := cpu.devices[0].read()
+		new_pc := uint16(new_pc_high)<<8 + uint16(new_pc_low)
+
+		// Push next address to the stack
+		pc_high := cpu.pc >> 8
+		pc_low := cpu.pc << 8 >> 8
+		cpu.devices[0].write(uint8(pc_low))
+		cpu.devices[0].write(uint8(pc_high))
+
+		// Jump
+		cpu.pc = new_pc
+	case 21:
+		// trap
+	case 22:
+		// Get return address off the stack
+		pc_high := cpu.devices[0].read()
+		pc_low := cpu.devices[0].read()
+		pc := uint16(pc_high)<<8 + uint16(pc_low)
+
+		// Jump
+		cpu.pc = pc
+	case 23:
+		// iret
+	default:
+		// device := stacki - 24
+		// TODO: enable device
 	}
 }
 
