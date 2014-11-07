@@ -128,3 +128,40 @@ func (in fill) translate(labels map[string]uint, pc uint) (out []instruction) {
 func (i fill) size() uint {
 	return uint(i.num)
 }
+
+type ljump struct {
+	label string
+	neg   bool
+	zero  bool
+	pos   bool
+}
+
+func (i ljump) translate(labels map[string]uint, pc uint) (o []instruction) {
+	addr, ok := labels[i.label]
+	if !ok {
+		panic(errors.New(fmt.Sprint("%v label not found", i.label)))
+	}
+
+	o = append(o, loadimm{7}.translate(labels, pc)...)
+	if i.isUnconditional() {
+		o = append(o, jmp{0, !i.neg, !i.zero, !i.pos})
+	}
+	o = append(o, loadimm{uint8(addr & 0xFF)}.translate(labels, pc)...)
+	o = append(o, devio{out, 0, 0})
+	o = append(o, loadimm{uint8((addr & 0xFF00) >> 8)}.translate(labels, pc)...)
+	o = append(o, devio{out, 0, 0})
+	o = append(o, stackop{22})
+	return
+}
+
+func (i ljump) size() (s uint) {
+	s = 2 + 2 + 1 + 2 + 1 + 1
+	if i.isUnconditional() {
+		s += 1
+	}
+	return
+}
+
+func (i ljump) isUnconditional() bool {
+	return !(i.neg && i.zero && i.pos)
+}
