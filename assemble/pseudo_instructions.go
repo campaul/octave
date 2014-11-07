@@ -81,12 +81,10 @@ func (i laa) translate(labels map[string]uint, pc uint) []instruction {
 			insts = append(insts, tworeg{mov, i.highreg, 0})
 		}
 	} else {
-		insts = append(insts, devio{out, 0, 0})
 		insts = append(insts, loadimm{uint8((addr & 0xFF00) >> 8)}.translate(labels, pc)...)
 		insts = append(insts, tworeg{mov, i.highreg, 0})
 		insts = append(insts, loadimm{uint8(addr & 0xFF)}.translate(labels, pc)...)
 		insts = append(insts, tworeg{mov, i.lowreg, 0})
-		insts = append(insts, devio{in, 0, 0})
 	}
 	return insts
 }
