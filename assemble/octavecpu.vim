@@ -31,8 +31,8 @@ syn match   octaveLabelIdentifier /[a-zA-z]/
 syn match   octaveLabel /[a-zA-Z]*:/
 
 syn match   octaveConstant /\d\+/
-syn match   octaveConstant /0x\x\x/
 syn match   octaveConstant /0x\x/
+syn match   octaveConstant /0x\x\x/
 
 syn region  octaveString start=/"/ skip=/\\"/ end=/"/
 
