@@ -12,7 +12,7 @@ endif
 
 syn case match
 
-syn keyword octaveInstruction HALT WAITI INTE INTD JMP
+syn keyword octaveInstruction HALT WAITI INTE INTD JMP LJMP
 syn keyword octaveInstruction LOADI LOADIL LOADIH
 syn keyword octaveInstruction ADD DIV
 syn keyword octaveInstruction AND XOR
