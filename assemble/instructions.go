@@ -101,7 +101,23 @@ type devio struct {
 
 func (i devio) assemble() (b byte) {
 	b |= i.opcode << 5
-	b |= i.register << 3
-	b |= i.device
+	switch i.opcode {
+	case in:
+		b |= i.register << 3
+		b |= i.device
+	case out:
+		b |= i.device << 2
+		b |= i.register
+	}
 	return
 }
+
+/*
+type rawbyte struct {
+	value uint8
+}
+
+func (i rawbyte) assemble() byte {
+	return value
+}
+*/
