@@ -28,6 +28,10 @@ func main() {
 	cpu.stack = stack{cpu}
 	cpu.devices[0] = cpu.stack
 	cpu.devices[1] = tty{bufio.NewReader(os.Stdin)}
+	cpu.devices[4] = register{}
+	cpu.devices[5] = register{}
+	cpu.devices[6] = register{}
+	cpu.devices[7] = register{}
 
 	if err != nil {
 		return
@@ -90,6 +94,18 @@ func fetch(cpu *CPU) uint8 {
 	inst := cpu.memory[cpu.pc]
 	cpu.pc = cpu.pc + 1
 	return inst
+}
+
+type register struct {
+	value uint8
+}
+
+func (r register) read() uint8 {
+	return r.value
+}
+
+func (r register) write(char uint8) {
+	r.value = char
 }
 
 func decode(i uint8) instruction {
