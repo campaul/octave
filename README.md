@@ -4,28 +4,38 @@ An 8-bit CPU designed for education
 
 ## ISA
 
-Jump       |
+### Jump
+
+Format     | Operation
 ---------- | -----------------
 000 RS NZP | PC <- MEM[RS] NZP
 
-Load I     |
+### Load Immediate
+
+Format     | Operation
 ---------  | -------------
 0010 IIII  | R0[HIGH] <- I
 0011 IIII  | R0[LOW] <- I
 
-ALU        |
+### ALU Operations
+
+Format     | Operation
 ---------- | -------------
 0100 RD RS | RD <- RD + RS
 0101 RD RS | RD <- RS
 0110 RD RS | RD <- RD & RS
 0111 RD RS | RD <- RD ^ RS
 
-Memory     |
+### Memory Operations
+
+Format     | Operation
 ---------- | -----------------
 1000 RX RY | R0 <- MEM[RX, RY]
 1001 RX RY | MEM[RX, RY] <- R0
 
-Stack Ops  |
+### Stack Operations
+
+Format     | Operation
 ---------- | -----------
 10100000   | add8
 10100001   | sub8
@@ -60,7 +70,8 @@ Stack Ops  |
 10111110   | int6 enable
 10111111   | int7 enable
 
-Input      |
----------- |
+### Device IO
+
+Format     | Operation
 110 RD DV  | RD <- DEV[DV]
 111 DV RS  | DEV[DV] <- RS
