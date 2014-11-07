@@ -134,3 +134,28 @@ func TestAssembleByte(t *testing.T) {
 		}
 	}
 }
+
+func TestAssembleStackopAlias(t *testing.T) {
+	tests := []testcase{
+		testcase{"DIV8", binaryHelperByte("10100011")},
+	}
+	for _, test := range tests {
+		b := assembleStackopAlias(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out)
+		}
+	}
+}
+
+func TestAssemblePushPop(t *testing.T) {
+	tests := []testcase{
+		testcase{"PUSH R0", binaryHelperByte("11100000")},
+		testcase{"POP R3", binaryHelperByte("11011000")},
+	}
+	for _, test := range tests {
+		b := assemblePushPop(test.in).assemble()
+		if b != test.out {
+			t.Error("Got", b, "expected", test.out, "for", test.in)
+		}
+	}
+}

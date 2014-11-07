@@ -25,27 +25,6 @@ func TestGenerateLoadi(t *testing.T) {
 	}
 }
 
-func TestLra(t *testing.T) {
-	bytes, err := Assemble(strings.NewReader(`
-	LRA R1, Thing
-	Thing:
-	JMP R1 NZP
-	`))
-	if err != nil {
-		t.Error("Unexpected error", err)
-	}
-	expected := []byte{
-		binaryHelperByte("11100000"),
-		binaryHelperByte("00110000"),
-		binaryHelperByte("00100000"),
-		binaryHelperByte("11000000"),
-		binaryHelperByte("00001111"),
-	}
-	if !reflect.DeepEqual(bytes, expected) {
-		t.Error("Got", bytesToAsm(bytes), "expected", bytesToAsm(expected))
-	}
-}
-
 func bytesToAsm(bytes []byte) string {
 	str := "[ "
 	for _, b := range bytes {

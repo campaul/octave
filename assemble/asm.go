@@ -25,6 +25,40 @@ var codeToFunc = map[string]func(string) instruction{
 	"OUT":     assembleDeviceIO,
 	"BYTE":    assembleByte,
 	"HALT":    assembleHalt,
+	"ADD8":    assembleStackopAlias,
+	"SUB8":    assembleStackopAlias,
+	"MUL8":    assembleStackopAlias,
+	"DIV8":    assembleStackopAlias,
+	"MOD8":    assembleStackopAlias,
+	"NEG8":    assembleStackopAlias,
+	"AND8":    assembleStackopAlias,
+	"OR8":     assembleStackopAlias,
+	"XOR8":    assembleStackopAlias,
+	"NOT8":    assembleStackopAlias,
+	"ADD16":   assembleStackopAlias,
+	"SUB16":   assembleStackopAlias,
+	"MUL16":   assembleStackopAlias,
+	"DIV16":   assembleStackopAlias,
+	"MOD16":   assembleStackopAlias,
+	"NEG16":   assembleStackopAlias,
+	"AND16":   assembleStackopAlias,
+	"OR16":    assembleStackopAlias,
+	"XOR16":   assembleStackopAlias,
+	"NOT16":   assembleStackopAlias,
+	"CALL":    assembleStackopAlias,
+	"TRAP":    assembleStackopAlias,
+	"RET":     assembleStackopAlias,
+	"IRET":    assembleStackopAlias,
+	"INT0E":   assembleStackopAlias,
+	"INT1E":   assembleStackopAlias,
+	"INT2E":   assembleStackopAlias,
+	"INT3E":   assembleStackopAlias,
+	"INT4E":   assembleStackopAlias,
+	"INT5E":   assembleStackopAlias,
+	"INT6E":   assembleStackopAlias,
+	"INT7E":   assembleStackopAlias,
+	"PUSH":    assemblePushPop,
+	"POP":     assemblePushPop,
 }
 
 func Assemble(in io.Reader) (bytes []byte, err error) {
@@ -178,4 +212,58 @@ func assembleByte(i string) instruction {
 
 func assembleHalt(i string) instruction {
 	return rawbyte{0}
+}
+
+var stackopAliases = map[string]uint8{
+	"ADD8":  0,
+	"SUB8":  1,
+	"MUL8":  2,
+	"DIV8":  3,
+	"MOD8":  4,
+	"NEG8":  5,
+	"AND8":  6,
+	"OR8":   7,
+	"XOR8":  8,
+	"NOT8":  9,
+	"ADD16": 10,
+	"SUB16": 11,
+	"MUL16": 12,
+	"DIV16": 13,
+	"MOD16": 14,
+	"NEG16": 15,
+	"AND16": 16,
+	"OR16":  17,
+	"XOR16": 18,
+	"NOT16": 19,
+	"CALL":  20,
+	"TRAP":  21,
+	"RET":   22,
+	"IRET":  23,
+	"INT0E": 24,
+	"INT1E": 25,
+	"INT2E": 26,
+	"INT3E": 27,
+	"INT4E": 28,
+	"INT5E": 29,
+	"INT6E": 30,
+	"INT7E": 31,
+}
+
+func assembleStackopAlias(line string) instruction {
+	return stackop{stackopAliases[line]}
+}
+
+func assemblePushPop(line string) instruction {
+	re := regexp.MustCompile("(PUSH|POP)[ \\t]R([0-3])")
+	matches := re.FindStringSubmatch(line)
+
+	if matches == nil {
+		panic(errors.New("not a (PUSH|POP)"))
+	}
+
+	reg := convertRegisterNum(matches[2])
+	if matches[1] == "PUSH" {
+		return devio{out, reg, 0}
+	}
+	return devio{in, reg, 0}
 }
