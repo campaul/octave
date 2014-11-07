@@ -43,13 +43,12 @@ func generateLoadi(line string) pseudoinst {
 
 func generateLra(line string) pseudoinst {
 	l := lra{}
-	re := regexp.MustCompile("LRA R([0-3]), ([A-Za-z]+)")
+	re := regexp.MustCompile("LRA ([A-Za-z]+)")
 	matches := re.FindStringSubmatch(line)
 	if matches == nil {
 		panic(errors.New("not an LRA"))
 	}
-	l.dest = convertRegisterNum(matches[1])
-	l.label = matches[2]
+	l.label = matches[1]
 	return l
 }
 
